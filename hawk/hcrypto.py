@@ -18,7 +18,7 @@ def calculateMac(macType, credentials, options):
         raise UnknownAlgorithm
     result = hmac.new(credentials['key'], normalized, digestmod)
     mac = b64encode(result.digest())
-
+    print mac
     return mac
 
 def normalizeString(macType, options):
@@ -30,14 +30,20 @@ def normalizeString(macType, options):
          options['resource'],
          options['host'].lower(),
          options['port'],
-         options['hash']])
+         options['hash']])    
 
-    if 'ext' in options:
+    if 'ext' in options and len(options['ext']) > 0:
+        print "doing ext"
         nExt = options['ext'].replace('\\', '\\\\').replace('\n', '\\n')
-        normalized += nExt + '\n'
-    if 'app' in options:
-        normalized += options['app'] + '\n'
-        if 'dlg' in options:
-            normalized += options['dlg']
-        normalized += '\n'
+        normalized += '\n' + nExt
+    if 'app' in options and len(options['app']) > 0:
+        print "doing app"
+        normalized += '\n' + options['app']
+        if 'dlg' in options and len(options['dlg']) > 0:
+            print "doing dlg"
+            normalized += '\n' + options['dlg']
+
+    normalized += '\n'
+
+    print "_" + normalized + "_"
     return normalized

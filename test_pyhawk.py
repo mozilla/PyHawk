@@ -39,7 +39,10 @@ if __name__ == '__main__':
         # TODO no querysting, don't append
         url = environ['PATH_INFO'] + '?' + environ['QUERY_STRING']
 
-        print environ['HTTP_AUTHORIZATION']
+        httpAuthHeader = ''
+        if 'HTTP_AUTHORIZATION' in environ:
+            print environ['HTTP_AUTHORIZATION']
+            httpAuthHeader = environ['HTTP_AUTHORIZATION']
         
         # TODO do host and port better
         req = {
@@ -48,10 +51,10 @@ if __name__ == '__main__':
             'host': environ['HTTP_HOST'].split(':')[0],
             'port': environ['HTTP_HOST'].split(':')[1],
             'headers': {
-                'authorization': environ['HTTP_AUTHORIZATION']
+                'authorization': httpAuthHeader
             }
         }
-
+        print "setup server"
         server = hawk.Server(req)
 
         # Look up from DB or elsewhere

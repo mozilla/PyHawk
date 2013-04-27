@@ -2,6 +2,9 @@ import time
 
 import hcrypto
 
+class BadMac(Exception):
+    pass
+
 class BadRequest(Exception):
     pass
 
@@ -29,6 +32,22 @@ class Server(object):
         artifacts = self.prepareArtifacts(req, attributes)
 
         mac = self.calculateMac(credentials, artifacts)
+
+        # TODO prevent timing attach
+        if not mac == attributes['mac']:
+            print "Calculated [" + mac + "] Attributes included [" + attributes['mac'] + "]"
+            raise BadMac
+
+        if 'payload' in options:
+            if 'hash' not in attributes:
+                print "Missing required payload hash"
+                raise BadRequest
+            pHash = hcrypto.calcuatePayloadHash(options['payload'], credentials['algorithm'], req['contentType'])
+            if not pHash == attributes['hash']:
+                print "Bad payload hash"
+                raise BadRequest
+
+        print "serviced request"
 
         return artifacts
 
@@ -81,14 +100,28 @@ class Server(object):
         allowableValues = "!#$%&'()*+,-./:;<=>?@[]^_`{|}~ abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
         for part in parts:
+            print part
             attrParts = part.split('=')
             key = attrParts[0].strip()
             if key not in allowableKeys:
                 print "Unknown Hawk key_" + attrParts[0] + "_"
                 raise BadRequest
 
+            # mac value includes '=' character... fixup
+            if 'mac' == key and len(attrParts) == 3:
+                attrParts[1] += '=' + attrParts[2]
+
             # Chop of quotation marks
-            value = attrParts[1][1:-1]
+            print attrParts[1]
+            value = attrParts[1]
+
+            if attrParts[1].find('"') == 0:
+                value = attrParts[1][1:]
+
+            if value.find('"') > 0:
+                print "Chopping quote off" + value
+                value = value[0:-1]
+            print value
             for c in value:
                 if c not in allowableValues:
                     raise BadRequest

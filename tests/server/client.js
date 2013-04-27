@@ -26,9 +26,10 @@ var credentialsFunc = function (id, callback) {
 
 // Send unauthenticated request
 
-Request('http://127.0.0.1:8000/resource/1?b=1&a=2', function (error, response, body) {
-
-    console.log(response.statusCode + ': ' + body);
+Request('http://127.0.0.1:8002/resource/1?b=1&a=2', function (error, response, body) {
+    if (response && response.statusCode) {
+        console.log(response.statusCode + ': ' + body);
+    }
 });
 
 
@@ -36,9 +37,9 @@ Request('http://127.0.0.1:8000/resource/1?b=1&a=2', function (error, response, b
 
 credentialsFunc('dh37fgj492je', function (err, credentials) {
 
-    var header = Hawk.client.header('http://127.0.0.1:8000/resource/1?b=1&a=2', 'GET', { credentials: credentials, ext: 'and welcome!' });
+    var header = Hawk.client.header('http://127.0.0.1:8002/resource/1?b=1&a=2', 'GET', { credentials: credentials, ext: 'and welcome!' });
     var options = {
-        uri: 'http://127.0.0.1:8000/resource/1?b=1&a=2',
+        uri: 'http://127.0.0.1:8002/resource/1?b=1&a=2',
         method: 'GET',
         headers: {
             authorization: header.field
@@ -48,7 +49,9 @@ credentialsFunc('dh37fgj492je', function (err, credentials) {
     Request(options, function (error, response, body) {
 
         var isValid = Hawk.client.authenticate(response, credentials, header.artifacts, { payload: body });
-        console.log(response.statusCode + ': ' + body + (isValid ? ' (valid)' : ' (invalid)'));
+        if (response && response.statusCode) {
+            console.log(response.statusCode + ': ' + body + (isValid ? ' (valid)' : ' (invalid)'));
+	}
         process.exit(0);
     });
 });
