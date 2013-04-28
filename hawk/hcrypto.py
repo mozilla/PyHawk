@@ -24,6 +24,10 @@ def moduleForAlgorithm(algorithm):
         raise UnknownAlgorithm
 
 def normalizeString(macType, options):
+    # TODO this smells
+    if 'hash' not in options or options['hash'] is None:
+        options['hash'] = ''
+
     normalized = '\n'.join(
         ['hawk.' + str(HAWK_VER) + '.' + macType,
          options['ts'],
@@ -49,16 +53,16 @@ def normalizeString(macType, options):
 def calculatePayloadHash(payload, algorithm, contentType):
     pHash = hashlib.new(algorithm)
     pHash.update('hawk.' + str(HAWK_VER) + '.payload\n');
-    pHash.update(parseContentType(contentType));
+    pHash.update(parseContentType(contentType) + '\n');
     if payload:
         pHash.update(payload)
     else:
         pHash.update('')
     pHash.update('\n')
-    mac = b64encode(pHash.digest())
-    
+    return b64encode(pHash.digest())
+
 def parseContentType(contentType):
     if contentType:
-        contentType.split(';')[0].strip().lower()
+        return contentType.split(';')[0].strip().lower()
     else:
         return '';

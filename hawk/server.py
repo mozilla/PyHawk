@@ -61,8 +61,6 @@ class Server(object):
             print "Expired request"
             raise BadRequest
 
-        print "serviced request"
-
         return artifacts
 
     def calculateMac(self, credentials, artifacts):
@@ -173,10 +171,11 @@ class Server(object):
         if not credentials or 'key' not in credentials or 'algorithm' not in credentials:
             return ''
 
-        if 'hash' not in hArtifacts and 'payload' in options:
-            hArtifacts['hash'] = hcrypto.calculatePayloadHash(options['payload'], credentials['algorithm'], options['contentType'])
+        if 'hash' not in hArtifacts or hArtifacts['hash'] is None or len(hArtifacts['hash']) == 0:
+            if 'payload' in options:
+                hArtifacts['hash'] = hcrypto.calculatePayloadHash(options['payload'], credentials['algorithm'], options['contentType'])
 
-        mac = hcrypto.calculateMac('header', credentials, hArtifacts)
+        mac = hcrypto.calculateMac('response', credentials, hArtifacts)
 
         header = 'Hawk mac="' + mac + '"'
         if 'hash' in hArtifacts:
