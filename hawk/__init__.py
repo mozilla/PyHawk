@@ -18,7 +18,7 @@ __copyright__ = 'Copyright 2013 Mozilla'
 
 
 from .client import Client
-from .server import Server
+from .server import Server, BadRequest, BadMac, MissingCredentials
 
 # Set default logging handler to avoid "No handler found" warnings.
 import logging

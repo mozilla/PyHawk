@@ -12,14 +12,16 @@ class UnknownAlgorithm(Exception):
 
 def calculateMac(macType, credentials, options):
     normalized = normalizeString(macType, options)
-    if 'sha256' == credentials['algorithm']:
-        digestmod = hashlib.sha256
-    else:
-        raise UnknownAlgorithm
+    digestmod = moduleForAlgorithm(credentials['algorithm'])
     result = hmac.new(credentials['key'], normalized, digestmod)
     mac = b64encode(result.digest())
-    print mac
     return mac
+
+def moduleForAlgorithm(algorithm):
+    if 'sha256' == algorithm:
+        return hashlib.sha256
+    else:
+        raise UnknownAlgorithm
 
 def normalizeString(macType, options):
     normalized = '\n'.join(
@@ -33,17 +35,30 @@ def normalizeString(macType, options):
          options['hash']])    
 
     if 'ext' in options and len(options['ext']) > 0:
-        print "doing ext"
         nExt = options['ext'].replace('\\', '\\\\').replace('\n', '\\n')
         normalized += '\n' + nExt
     if 'app' in options and len(options['app']) > 0:
-        print "doing app"
         normalized += '\n' + options['app']
         if 'dlg' in options and len(options['dlg']) > 0:
-            print "doing dlg"
             normalized += '\n' + options['dlg']
 
     normalized += '\n'
 
-    print "_" + normalized + "_"
     return normalized
+
+def calculatePayloadHash(payload, algorithm, contentType):
+    pHash = hashlib.new(algorithm)
+    pHash.update('hawk.' + str(HAWK_VER) + '.payload\n');
+    pHash.update(parseContentType(contentType));
+    if payload:
+        pHash.update(payload)
+    else:
+        pHash.update('')
+    pHash.update('\n')
+    mac = b64encode(pHash.digest())
+    
+def parseContentType(contentType):
+    if contentType:
+        contentType.split(';')[0].strip().lower()
+    else:
+        return '';

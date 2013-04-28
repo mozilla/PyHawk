@@ -1,6 +1,9 @@
+import copy
+import math
 import time
 
 import hcrypto
+import util
 
 class BadMac(Exception):
     pass
@@ -20,13 +23,16 @@ class Server(object):
         """
 
         options can have the following
-        * nonceFn - A callback to validate if a given nonce is valid
+        * checkNonceFn - A callback to validate if a given nonce is valid
         * timestampSkewSec - Allows for clock skew in seconds. Defaults to 60.
         * localtimeOffsetMsec - Offset for client time. Defaults to 0.
         * options.payload - Required
 
         """
         now = time.time()
+
+        self.checkOptions(options)
+
         attributes = self.parseAuthorizationHeader(req['headers']['authorization'])
 
         artifacts = self.prepareArtifacts(req, attributes)
@@ -42,10 +48,18 @@ class Server(object):
             if 'hash' not in attributes:
                 print "Missing required payload hash"
                 raise BadRequest
-            pHash = hcrypto.calcuatePayloadHash(options['payload'], credentials['algorithm'], req['contentType'])
+            pHash = hcrypto.calculatePayloadHash(options['payload'], credentials['algorithm'], req['contentType'])
             if not pHash == attributes['hash']:
                 print "Bad payload hash"
                 raise BadRequest
+
+        if 'checkNonceFn' in options:
+            if not options.checkNonceFn(attributes.nonce, attributes.ts):
+                raise BadRequest
+
+        if math.fabs(int(attributes['ts']) - now) > int(options['timestampSkewSec']):
+            print "Expired request"
+            raise BadRequest
 
         print "serviced request"
 
@@ -96,11 +110,8 @@ class Server(object):
 
         allowableKeys = ['id', 'ts', 'nonce', 'hash', 'ext', 'mac', 'app', 'dlg']
         requiredKeys = ['id', 'ts', 'nonce', 'mac']
-        # Allowed attribute value characters: !#$%&'()*+,-./:;<=>?@[]^_`{|}~ and space, a-z, A-Z, 0-9
-        allowableValues = "!#$%&'()*+,-./:;<=>?@[]^_`{|}~ abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
         for part in parts:
-            print part
             attrParts = part.split('=')
             key = attrParts[0].strip()
             if key not in allowableKeys:
@@ -112,19 +123,15 @@ class Server(object):
                 attrParts[1] += '=' + attrParts[2]
 
             # Chop of quotation marks
-            print attrParts[1]
             value = attrParts[1]
 
             if attrParts[1].find('"') == 0:
                 value = attrParts[1][1:]
 
             if value.find('"') > 0:
-                print "Chopping quote off" + value
                 value = value[0:-1]
-            print value
-            for c in value:
-                if c not in allowableValues:
-                    raise BadRequest
+            
+            util.checkHeaderAttribute(value)
 
             if key in attributes:
                 raise BadRequest
@@ -136,5 +143,54 @@ class Server(object):
                 raise BadRequest
         return attributes
 
-    def header(self, credentials, artifacts, options):
-      return 'foo'
+    def header(self, credentials, artifacts, options=None):
+        """ Generate a Server-Authorization header for a given response.
+
+    credentials: {},                                        // Object received from authenticate()
+    artifacts: {}                                           // Object received from authenticate(); 'mac', 'hash', and 'ext' - ignored
+    options: {
+        ext: 'application-specific',                        // Application specific data sent via the ext attribute
+        payload: '{"some":"payload"}',                      // UTF-8 encoded string for body hash generation (ignored if hash provided)
+        contentType: 'application/json',                    // Payload content-type (ignored if hash provided)
+        hash: 'U4MKKSmiVxk37JCCrAVIjV='                     // Pre-calculated payload hash
+    }
+        """
+        if options is None:
+            options = {}
+
+        if not artifacts or not isinstance(artifacts, dict) or not isinstance(options, dict):
+            return ''
+
+        hArtifacts = copy.copy(artifacts)
+        del hArtifacts['mac']
+
+        if 'hash' in options:
+            hArtifacts['hash'] = options['hash']
+
+        if 'ext' in options:
+            hArtifacts['ext'] = options['ext']
+
+        if not credentials or 'key' not in credentials or 'algorithm' not in credentials:
+            return ''
+
+        if 'hash' not in hArtifacts and 'payload' in options:
+            hArtifacts['hash'] = hcrypto.calculatePayloadHash(options['payload'], credentials['algorithm'], options['contentType'])
+
+        mac = hcrypto.calculateMac('header', credentials, hArtifacts)
+
+        header = 'Hawk mac="' + mac + '"'
+        if 'hash' in hArtifacts:
+            header += ', hash="' + hArtifacts['hash'] + '"'
+
+        if 'ext' in hArtifacts and hArtifacts['ext'] is not None and len(hArtifacts['ext']) > 0:
+            hExt = util.checkHeaderAttribute(hArtifacts['ext']).replace('\\', '\\\\').replace('\n', '\\n')
+            header += ', ext="' + hExt + '"'
+
+        return header
+
+    def checkOptions(self, options):
+        if 'timestampSkewSec' not in options:
+            options['timestampSkewSec'] = 60
+
+        if 'localtimeOffsetMsec' not in options:
+            options['localtimeOffsetMsec'] = 0

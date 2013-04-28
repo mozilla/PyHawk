@@ -62,19 +62,21 @@ if __name__ == '__main__':
                         'algorithm': 'sha256',
                         'key': 'werxhqb98rpaxn39848xrunpaw3489ruxnpa98w4rxn' }
 
-        artifacts = server.authenticate(req, credentials, {})
+        try:
+            artifacts = server.authenticate(req, credentials, {})
 
-        payload = 'Hello ' + credentials['id'] + ' ' + artifacts['ext']
-        status = '200 OK'
-        auth = server.header(credentials, artifacts, { 'payload': payload,
+            payload = 'Hello ' + credentials['id'] + ' ' + artifacts['ext']
+            status = '200 OK'
+            auth = server.header(credentials, artifacts, { 'payload': payload,
                                                             'contentType': 'text/plain'})
-        headers = [('Content-type', 'text/plain'), ('Server-Authorization', auth)]
+            headers = [('Content-type', 'text/plain'), ('Server-Authorization', auth)]
 
-        start_response(status, headers)
+            start_response(status, headers)
 
-        ret = ["%s: %s\n" % (key, value)
-               for key, value in environ.iteritems()]
-        return ret
+            return payload
+        except (hawk.BadRequest, hawk.BadMac):
+            start_response('401 Unauthorized', [])
+            return 'Please authenticate'
 
     httpd = make_server('', 8002, simple_app)
     print "Serving on port 8002..."
