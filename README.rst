@@ -5,7 +5,7 @@ Hawk_ is an HTTP authentication scheme using a message authentication code (MAC)
 
 .. _Hawk: https://github.com/hueniverse/hawk
 
-PyHawk is great for consuming or providing webservices form Python.
+PyHawk is great for consuming or providing webservices from Python.
 
 Status
 ------
