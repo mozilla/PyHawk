@@ -1,6 +1,8 @@
 from base64 import b64encode
 import hashlib
 import hmac
+import random
+import string
 
 
 HAWK_VER = 1
@@ -30,18 +32,18 @@ def normalizeString(macType, options):
 
     normalized = '\n'.join(
         ['hawk.' + str(HAWK_VER) + '.' + macType,
-         options['ts'],
+         str(options['ts']),
          options['nonce'],
          options['method'].upper(),
          options['resource'],
          options['host'].lower(),
-         options['port'],
-         options['hash']])    
+         str(options['port']),
+         options['hash']])
 
     if 'ext' in options and len(options['ext']) > 0:
         nExt = options['ext'].replace('\\', '\\\\').replace('\n', '\\n')
         normalized += '\n' + nExt
-    if 'app' in options and len(options['app']) > 0:
+    if 'app' in options and options['app'] is not None and len(options['app']) > 0:
         normalized += '\n' + options['app']
         if 'dlg' in options and len(options['dlg']) > 0:
             normalized += '\n' + options['dlg']
@@ -66,3 +68,6 @@ def parseContentType(contentType):
         return contentType.split(';')[0].strip().lower()
     else:
         return '';
+
+def randomString(length):
+    return ''.join(random.choice(string.lowercase) for i in range(length))

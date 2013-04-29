@@ -1,6 +1,8 @@
 from wsgiref.util import setup_testing_defaults
 from wsgiref.simple_server import make_server
 
+import hawk
+
 def simple_app(environ, start_response):
     """
     Usage: python test_server.py

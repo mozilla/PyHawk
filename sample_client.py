@@ -1,3 +1,5 @@
+import requests
+
 import hawk
 
 # sample_client.py should work with either sample_server.py
@@ -10,5 +12,14 @@ credentials = {
     'user': 'Steve'
 }
 
-url = 'http://127.0.0.1:8000/resource/1?b=1&a=2'
+url = 'http://127.0.0.1:8002/resource/1?b=1&a=2'
+params = {'b': 1, 'a': 2}
 
+client = hawk.Client()
+
+header = client.header(url, 'GET', { 'credentials': credentials, 'ext': 'and welcome!' })
+
+headers = [('Authorization', header['field'])]
+r = requests.get(url, data=params, headers=headers)
+
+print str(r.status_code) + ' ' + r.text
