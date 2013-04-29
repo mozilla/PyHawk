@@ -24,60 +24,13 @@ class HawkTestCase(unittest.TestCase):
         hawk.Client
         hawk.Server
 
+    def test_client_server(self):
+        """
+        TODO: Take logic from sample_client.py and sample_server.py
+        and put them into a test here.
+        """
+        pass        
+
 
 if __name__ == '__main__':
-#    unittest.main()
-
-    from wsgiref.util import setup_testing_defaults
-    from wsgiref.simple_server import make_server
-
-    # A relatively simple WSGI application. It's going to print out the
-    # environment dictionary after being updated by setup_testing_defaults
-    def simple_app(environ, start_response):
-        setup_testing_defaults(environ)
-        
-        # TODO no querysting, don't append
-        url = environ['PATH_INFO'] + '?' + environ['QUERY_STRING']
-
-        httpAuthHeader = ''
-        if 'HTTP_AUTHORIZATION' in environ:
-            print environ['HTTP_AUTHORIZATION']
-            httpAuthHeader = environ['HTTP_AUTHORIZATION']
-        
-        # TODO do host and port better
-        req = {
-            'method': environ['REQUEST_METHOD'],
-            'url': url,
-            'host': environ['HTTP_HOST'].split(':')[0],
-            'port': environ['HTTP_HOST'].split(':')[1],
-            'headers': {
-                'authorization': httpAuthHeader
-            }
-        }
-        print "setup server"
-        server = hawk.Server(req)
-
-        # Look up from DB or elsewhere
-        credentials = { 'id': 'dh37fgj492je',
-                        'algorithm': 'sha256',
-                        'key': 'werxhqb98rpaxn39848xrunpaw3489ruxnpa98w4rxn' }
-
-        try:
-            artifacts = server.authenticate(req, credentials, {})
-
-            payload = 'Hello ' + credentials['id'] + ' ' + artifacts['ext']
-            status = '200 OK'
-            auth = server.header(credentials, artifacts, { 'payload': payload,
-                                                            'contentType': 'text/plain'})
-            headers = [('Content-type', 'text/plain'), ('Server-Authorization', auth)]
-
-            start_response(status, headers)
-
-            return payload
-        except (hawk.BadRequest, hawk.BadMac):
-            start_response('401 Unauthorized', [])
-            return 'Please authenticate'
-
-    httpd = make_server('', 8002, simple_app)
-    print "Serving on port 8002..."
-    httpd.serve_forever()
+    unittest.main()
