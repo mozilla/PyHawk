@@ -29,7 +29,7 @@ class Server(object):
         * options.payload - Required
 
         """
-        now = time.time()
+        now = math.floor(time.time())
 
         self.checkOptions(options)
 

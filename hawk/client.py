@@ -2,6 +2,7 @@ import time
 from urlparse import urlparse
 
 import hcrypto
+import math
 import util
 
 
@@ -48,12 +49,12 @@ class Client(object):
             print "Bad credentail elements skipping"
             return result
 
-        timestamp = time.time()
+        timestamp = math.floor(time.time())
         if 'timestamp' in options:
             offset = 0
             if 'localtimeOffsetMsec' in options:
                 offset = int(options['localtimeOffsetMsec'])
-            timestamp = options['timestamp'] + offset
+            timestamp = math.floor(options['timestamp'] + offset)
 
         if 'nonce' not in options:
             options['nonce'] = hcrypto.randomString(6)
@@ -80,7 +81,7 @@ class Client(object):
             resource += '?' + urlParts.query
 
         artifacts = {
-            'ts': timestamp,
+            'ts': int(timestamp),
             'nonce': options['nonce'],
             'method': method,
             'resource': resource,
