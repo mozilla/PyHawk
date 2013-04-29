@@ -21,7 +21,7 @@ The `tests/server` directory has a server.js and a client.js (Node code) which a
 
 To test the server, do the following:
 
-1) python test_pyhawk.py
+1) python sample_server.py
 2) cd tests/server
 3) node client.js
 
@@ -33,6 +33,17 @@ Output should be
     401: Please authenticate
 
 Note: the port numbers in test_pyhawk.py and client.js must match.
+
+To test the client, do the following:
+
+1) cd tests/server
+2) node server.js
+3) cd ../..
+4) python sample_client.py
+
+Output should be
+
+    200 Hello Steve and welcome!
 
 Plan
 ----
@@ -47,4 +58,4 @@ Iterate on a python library until it can communicate with the test client/server
 Status
 ------
 
-Server API is working according to the Node.js implementation. W00t!
+Client and Server APIs are working according to the Node.js implementation. W00t!
