@@ -58,10 +58,12 @@ def main():
             artifacts = server.authenticate(req, credentials, {})
             payload = 'Hello ' + credentials['id'] + ' ' + artifacts['ext']
             status = '200 OK'
-            auth = server.header(credentials, artifacts, { 'payload': payload,
-                                                                'contentType': 'text/plain'})
+            auth = server.header(credentials, artifacts,
+                                 { 'payload': payload,
+                                   'contentType': 'text/plain' })
 
-            headers = [('Content-Type', 'text/plain'), ('Server-Authorization', auth)]
+            headers = [('Content-Type', 'text/plain'),
+                       ('Server-Authorization', auth)]
 
             start_response(status, headers)
 

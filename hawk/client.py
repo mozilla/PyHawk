@@ -107,7 +107,8 @@ class Client(object):
         if artifacts['hash'] is None and 'payload' in options:
             if 'contentType' not in options:
                 options['contentType'] = 'text/plain'
-            artifacts['hash'] = hcrypto.calculate_payload_hash(options['payload'], cred['algorithm'], options['contentType'])
+            artifacts['hash'] = hcrypto.calculate_payload_hash(
+                options['payload'], cred['algorithm'], options['contentType'])
 
         mac = hcrypto.calculate_mac('header', cred, artifacts)
 
@@ -121,7 +122,8 @@ class Client(object):
             header += ', hash="' + artifacts['hash'] + '"'
 
         if artifacts['ext'] is not None and len(artifacts['ext']) > 0:
-            h_ext = util.check_header_attribute(artifacts['ext']).replace('\\', '\\\\').replace('\n', '\\n')
+            util.check_header_attribute(artifacts['ext'])
+            h_ext = artifacts['ext'].replace('\\', '\\\\').replace('\n', '\\n')
             header += ', ext="' + h_ext + '"'
 
         header += ', mac="' + mac + '"'
@@ -136,7 +138,7 @@ class Client(object):
         return result
 
     def authenticate(self, response, credentials, artifacts, options=None):
-        """ Validate server response.
+        """Validate server response.
 
         response: dictionary with server response
         artifacts:  object recieved from header().artifacts
@@ -159,22 +161,26 @@ class Client(object):
             options['required'] = False        
 
         if 'www-authenticate' in response['headers']:
-            www_auth_attrs = util.parse_authorization_header(response['headers']['www-authenticate'], ['ts', 'tsm', 'error'])
+            www_auth_attrs = util.parse_authorization_header(
+                response['headers']['www-authenticate'], ['ts', 'tsm', 'error'])
 
             if 'ts' in www_auth_attrs:
-                ts_mac = hcrypto.calculate_ts_mac(www_auth_attrs['ts'], credentials)
+                ts_mac = hcrypto.calculate_ts_mac(www_auth_attrs['ts'],
+                                                  credentials)
                 if not ts_mac == www_auth_attrs['ts']:
                     print ts_mac + " didn't match " + www_auth_attrs['ts']
                     return False
 
-        if 'server-authorization' not in response['headers'] and False == options['required']:
+        if 'server-authorization' not in response['headers'] and \
+           False == options['required']:
             return True
 
         if 'server-authorization' not in response['headers']:
             print "Unable to verify, no server-authorization header"
             return False
 
-        s_auth_attrs = util.parse_authorization_header(response['headers']['server-authorization'], ['mac', 'ext', 'hash'])
+        s_auth_attrs = util.parse_authorization_header(
+            response['headers']['server-authorization'], ['mac', 'ext', 'hash'])
         if 'ext' in s_auth_attrs:
             artifacts['ext'] = s_auth_attrs['ext']
         else:
@@ -184,7 +190,7 @@ class Client(object):
 
         mac = hcrypto.calculate_mac('response', credentials, artifacts)
         if not mac == s_auth_attrs['mac']:
-            print "server-auth mac mismatch " + mac + " != " + s_auth_attrs['mac']
+            print "server mac mismatch " + mac + " != " + s_auth_attrs['mac']
             return False
 
         if 'payload' in options:
@@ -193,7 +199,10 @@ class Client(object):
         if 'hash' not in s_auth_attrs:
             return False
 
-        p_mac = hcrypto.calculate_payload_hash(options['payload'], credentials['algorithm'], response['headers']['content-type'])
+        content_type = response['headers']['content-type']
+        p_mac = hcrypto.calculate_payload_hash(options['payload'],
+                                               credentials['algorithm'],
+                                               content_type)
         if not p_mac == s_auth_attrs['hash']:
             print "p_mac " + p_mac + " != " + s_auth_attrs['hash']
         return p_mac == s_auth_attrs['hash']

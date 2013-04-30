@@ -14,7 +14,8 @@ class ParseError(Exception):
     """ Exception raised for bad values. """
     pass
 
-# Allowed attribute value characters: !#$%&'()*+,-./:;<=>?@[]^_`{|}~ and space, a-z, A-Z, 0-9
+# Allowed attribute value characters: !#$%&'()*+,-./:;<=>?@[]^_`{|}~ and
+# space, a-z, A-Z, 0-9
 ALLOWABLE_CHARS = "!#$%&'()*+,-./:;<=>?@[]^_`{|}~ abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
 
@@ -35,7 +36,8 @@ def parse_authorization_header(auth_header, allowable_keys=None):
         raise BadRequest
 
     if allowable_keys is None:
-        allowable_keys = ['id', 'ts', 'nonce', 'hash', 'ext', 'mac', 'app', 'dlg']
+        allowable_keys = ['id', 'ts', 'nonce', 'hash',
+                          'ext', 'mac', 'app', 'dlg']
 
     attributes = {}
     parts = auth_header.split(',')
@@ -44,7 +46,8 @@ def parse_authorization_header(auth_header, allowable_keys=None):
         print "Unknown scheme: " + auth_scheme_parts[0].lower()
         raise BadRequest
 
-    # Replace 'Hawk key: value' with 'key: value' which matches the rest of parts
+    # Replace 'Hawk key: value' with 'key: value'
+    # which matches the rest of parts
     parts[0] = auth_scheme_parts[1]
         
     for part in parts:

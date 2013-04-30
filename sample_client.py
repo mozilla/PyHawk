@@ -26,7 +26,8 @@ def main():
 
     client = hawk.Client()
 
-    header = client.header(url, 'GET', { 'credentials': credentials, 'ext': 'and welcome!' })
+    header = client.header(url, 'GET', { 'credentials': credentials,
+                                         'ext': 'and welcome!' })
 
     headers = [('Authorization', header['field'])]
     res = requests.get(url, data=params, headers=headers)
@@ -37,7 +38,8 @@ def main():
         'headers': res.headers
         }
 
-    if client.authenticate(response, credentials, header['artifacts'], { 'payload': res.text }):
+    if client.authenticate(response, credentials, header['artifacts'],
+                           { 'payload': res.text }):
         print "(valid)"
     else:
         print "(invalid)"
