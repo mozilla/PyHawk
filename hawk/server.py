@@ -1,22 +1,42 @@
+# -*- coding: utf-8 -*-
+
+"""
+Python library for HAWK
+~~~~~~~~~~~~~~~~~~~~
+
+:copyright: (c) 2013 by Mozilla.
+:license: see LICENSE for more details.
+
+"""
+
 import copy
 import math
 import time
 
-import hcrypto
-import util
+import hawk.hcrypto as hcrypto
+import hawk.util as util
+
 
 class BadMac(Exception):
+    """ Exception raised for mac mismatch. """
     pass
+
 
 class BadRequest(Exception):
+    """ Exception raised for bad inputs on request. """
     pass
+
 
 class MissingCredentials(Exception):
+    """ Exception raised for bad security configuration. """
     pass
 
+
 class Server(object):
+    """ Object with authenticate and header methods. """
 
     def __init__(self, req):
+        """ Initialize a Server object. """
         self.req = req
 
     def authenticate(self, req, credentials, options):
@@ -31,13 +51,13 @@ class Server(object):
         """
         now = math.floor(time.time())
 
-        self.checkOptions(options)
+        self.check_options(options)
 
-        attributes = util.parseAuthorizationHeader(req['headers']['authorization'])
+        attributes = util.parse_authorization_header(req['headers']['authorization'])
 
-        artifacts = self.prepareArtifacts(req, attributes)
+        artifacts = self.prepare_artifacts(req, attributes)
 
-        mac = self.calculateMac(credentials, artifacts)
+        mac = self.calculate_mac(credentials, artifacts)
 
         # TODO prevent timing attach
         if not mac == attributes['mac']:
@@ -48,13 +68,13 @@ class Server(object):
             if 'hash' not in attributes:
                 print "Missing required payload hash"
                 raise BadRequest
-            pHash = hcrypto.calculatePayloadHash(options['payload'], credentials['algorithm'], req['contentType'])
-            if not pHash == attributes['hash']:
+            p_hash = hcrypto.calculate_payload_hash(options['payload'], credentials['algorithm'], req['contentType'])
+            if not p_hash == attributes['hash']:
                 print "Bad payload hash"
                 raise BadRequest
 
-        if 'checkNonceFn' in options:
-            if not options.checkNonceFn(attributes.nonce, attributes.ts):
+        if 'check_nonce_fn' in options:
+            if not options['check_nonce_fn'](attributes['nonce'], attributes['ts']):
                 raise BadRequest
 
         if math.fabs(int(attributes['ts']) - now) > int(options['timestampSkewSec']):
@@ -63,24 +83,26 @@ class Server(object):
 
         return artifacts
 
-    def calculateMac(self, credentials, artifacts):
+    def calculate_mac(self, credentials, artifacts):
+        """ Checks inputs and calculates MAC. """
         if 'key' not in credentials or 'algorithm' not in credentials:
             raise MissingCredentials
         
-        mac = hcrypto.calculateMac('header', credentials, artifacts)
+        mac = hcrypto.calculate_mac('header', credentials, artifacts)
 
         return mac
 
-    def prepareArtifacts(self, req, attributes):
+    def prepare_artifacts(self, req, attributes):
+        """ Converts the request and attributes into an artifacts dict. """
         artifacts = {
             'method': req['method'],
             'host': req['host'],
             'port': req['port'],
             'resource': req['url']
         }
-        artifactKeys = ['ts', 'nonce', 'hash', 'ext', 'app', 'dlg', 'mac', 'id']
+        artifact_keys = ['ts', 'nonce', 'hash', 'ext', 'app', 'dlg', 'mac', 'id']
         attrs = attributes.keys()
-        for key in artifactKeys:
+        for key in artifact_keys:
             if key in attrs:
                 artifacts[key] = attributes[key]
             else:
@@ -106,35 +128,36 @@ class Server(object):
         if not artifacts or not isinstance(artifacts, dict) or not isinstance(options, dict):
             return ''
 
-        hArtifacts = copy.copy(artifacts)
-        del hArtifacts['mac']
+        h_artifacts = copy.copy(artifacts)
+        del h_artifacts['mac']
 
         if 'hash' in options:
-            hArtifacts['hash'] = options['hash']
+            h_artifacts['hash'] = options['hash']
 
         if 'ext' in options:
-            hArtifacts['ext'] = options['ext']
+            h_artifacts['ext'] = options['ext']
 
         if not credentials or 'key' not in credentials or 'algorithm' not in credentials:
             return ''
 
-        if 'hash' not in hArtifacts or hArtifacts['hash'] is None or len(hArtifacts['hash']) == 0:
+        if 'hash' not in h_artifacts or h_artifacts['hash'] is None or len(h_artifacts['hash']) == 0:
             if 'payload' in options:
-                hArtifacts['hash'] = hcrypto.calculatePayloadHash(options['payload'], credentials['algorithm'], options['contentType'])
+                h_artifacts['hash'] = hcrypto.calculate_payload_hash(options['payload'], credentials['algorithm'], options['contentType'])
 
-        mac = hcrypto.calculateMac('response', credentials, hArtifacts)
+        mac = hcrypto.calculate_mac('response', credentials, h_artifacts)
 
         header = 'Hawk mac="' + mac + '"'
-        if 'hash' in hArtifacts:
-            header += ', hash="' + hArtifacts['hash'] + '"'
+        if 'hash' in h_artifacts:
+            header += ', hash="' + h_artifacts['hash'] + '"'
 
-        if 'ext' in hArtifacts and hArtifacts['ext'] is not None and len(hArtifacts['ext']) > 0:
-            hExt = util.checkHeaderAttribute(hArtifacts['ext']).replace('\\', '\\\\').replace('\n', '\\n')
-            header += ', ext="' + hExt + '"'
+        if 'ext' in h_artifacts and h_artifacts['ext'] is not None and len(h_artifacts['ext']) > 0:
+            h_ext = util.check_header_attribute(h_artifacts['ext']).replace('\\', '\\\\').replace('\n', '\\n')
+            header += ', ext="' + h_ext + '"'
 
         return header
 
-    def checkOptions(self, options):
+    def check_options(self, options):
+        """ Provides defaults for options. """
         if 'timestampSkewSec' not in options:
             options['timestampSkewSec'] = 60
 

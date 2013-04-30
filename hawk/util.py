@@ -1,65 +1,74 @@
+# -*- coding: utf-8 -*-
+
+"""
+Various low level helper functions for HAWK authentication.
+"""
+
 
 class BadRequest(Exception):
+    """ Exception raised for bad inputs on request. """
     pass
 
 
 class ParseError(Exception):
+    """ Exception raised for bad values. """
     pass
 
 # Allowed attribute value characters: !#$%&'()*+,-./:;<=>?@[]^_`{|}~ and space, a-z, A-Z, 0-9
-allowableValues = "!#$%&'()*+,-./:;<=>?@[]^_`{|}~ abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+ALLOWABLE_CHARS = "!#$%&'()*+,-./:;<=>?@[]^_`{|}~ abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
 
-def checkHeaderAttribute(value):
-    for c in value:
-        if c not in allowableValues:
+def check_header_attribute(value):
+    """ Validates header values contain allowable characters. """
+    for char in value:
+        if char not in ALLOWABLE_CHARS:
             raise BadRequest
     return value
 
-def parseAuthorizationHeader(authHeader, allowableKeys=None):
+def parse_authorization_header(auth_header, allowable_keys=None):
     """
     Example Authorization header:
     'Hawk id="dh37fgj492je", ts="1367076201", nonce="NPHgnG", ext="and welcome!", mac="CeWHy4d9kbLGhDlkyw2Nh3PJ7SDOdZDa267KH4ZaNMY="'
     """
 
-    if authHeader is None:
+    if auth_header is None:
         raise BadRequest
 
-    if allowableKeys is None:
-        allowableKeys = ['id', 'ts', 'nonce', 'hash', 'ext', 'mac', 'app', 'dlg']
+    if allowable_keys is None:
+        allowable_keys = ['id', 'ts', 'nonce', 'hash', 'ext', 'mac', 'app', 'dlg']
 
     attributes = {}
-    parts = authHeader.split(',')
-    authSchemeParts = parts[0].split(' ')
-    if not 'hawk' == authSchemeParts[0].lower():
-        print "Unknown scheme: " + authSchemeParts[0].lower()
+    parts = auth_header.split(',')
+    auth_scheme_parts = parts[0].split(' ')
+    if not 'hawk' == auth_scheme_parts[0].lower():
+        print "Unknown scheme: " + auth_scheme_parts[0].lower()
         raise BadRequest
 
     # Replace 'Hawk key: value' with 'key: value' which matches the rest of parts
-    parts[0] = authSchemeParts[1]
+    parts[0] = auth_scheme_parts[1]
         
     for part in parts:
-        attrParts = part.split('=')
-        key = attrParts[0].strip()
-        if key not in allowableKeys:
-            print "Unknown Hawk key_" + attrParts[0] + "_"
+        attr_parts = part.split('=')
+        key = attr_parts[0].strip()
+        if key not in allowable_keys:
+            print "Unknown Hawk key_" + attr_parts[0] + "_"
             raise BadRequest
 
         # TODO we don't do a good job of parsing, '=' should work for more =.
         # hash or mac value includes '=' character... fixup
-        if len(attrParts) == 3:
-            attrParts[1] += '=' + attrParts[2]
+        if len(attr_parts) == 3:
+            attr_parts[1] += '=' + attr_parts[2]
 
         # Chop of quotation marks
-        value = attrParts[1]
+        value = attr_parts[1]
 
-        if attrParts[1].find('"') == 0:
-            value = attrParts[1][1:]
+        if attr_parts[1].find('"') == 0:
+            value = attr_parts[1][1:]
 
         if value.find('"') > 0:
             value = value[0:-1]
             
-        checkHeaderAttribute(value)
+        check_header_attribute(value)
 
         if key in attributes:
             raise BadRequest

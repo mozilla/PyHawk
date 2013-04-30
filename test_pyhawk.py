@@ -4,8 +4,6 @@
 """Tests for Requests."""
 
 import unittest
-import SimpleHTTPServer
-import SocketServer
 
 import hawk
 

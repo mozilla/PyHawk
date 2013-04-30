@@ -1,12 +1,21 @@
+# -*- coding: utf-8 -*-
+
+"""
+Server APIs for HAWK Authentication.
+"""
+
+import math
 import time
 from urlparse import urlparse
 
-import hcrypto
-import math
-import util
+import hawk.hcrypto as hcrypto
+import hawk.util as util
 
 
 class Client(object):
+    """
+    Object with header and authenticate methods.
+    """
 
     def header(self, url, method, options=None):
         """
@@ -57,14 +66,14 @@ class Client(object):
             timestamp = math.floor(options['timestamp'] + offset)
 
         if 'nonce' not in options:
-            options['nonce'] = hcrypto.randomString(6)
-            
-        urlParts = urlparse(url)
-        if urlParts.port is None:
-            if urlParts.scheme == 'http':
-                urlParts.port = 80
-            elif urlParts.scheme == 'https':
-                urlParts.port = 443
+            options['nonce'] = hcrypto.random_string(6)
+
+        url_parts = urlparse(url)
+        if url_parts.port is None:
+            if url_parts.scheme == 'http':
+                url_parts.port = 80
+            elif url_parts.scheme == 'https':
+                url_parts.port = 443
 
         # TODO use None or '' for these optional artifacts?
         if 'hash' not in options:
@@ -76,17 +85,17 @@ class Client(object):
         if 'dlg' not in options:
             options['dlg'] = None
 
-        resource = urlParts.path
-        if len(urlParts.query) > 0:
-            resource += '?' + urlParts.query
+        resource = url_parts.path
+        if len(url_parts.query) > 0:
+            resource += '?' + url_parts.query
 
         artifacts = {
             'ts': int(timestamp),
             'nonce': options['nonce'],
             'method': method,
             'resource': resource,
-            'host': urlParts.hostname,
-            'port': urlParts.port,
+            'host': url_parts.hostname,
+            'port': url_parts.port,
             'hash': options['hash'],
             'ext': options['ext'],
             'app': options['app'],
@@ -98,9 +107,9 @@ class Client(object):
         if artifacts['hash'] is None and 'payload' in options:
             if 'contentType' not in options:
                 options['contentType'] = 'text/plain'
-            artifacts['hash'] = hcrypto.calculatePayloadHash(options['payload'], cred['algorithm'], options['contentType'])
+            artifacts['hash'] = hcrypto.calculate_payload_hash(options['payload'], cred['algorithm'], options['contentType'])
 
-        mac = hcrypto.calculateMac('header', cred, artifacts)
+        mac = hcrypto.calculate_mac('header', cred, artifacts)
 
         header = ''.join([
             'Hawk id="', cred['id'], '"',
@@ -112,8 +121,8 @@ class Client(object):
             header += ', hash="' + artifacts['hash'] + '"'
 
         if artifacts['ext'] is not None and len(artifacts['ext']) > 0:
-            hExt = util.checkHeaderAttribute(artifacts['ext']).replace('\\', '\\\\').replace('\n', '\\n')
-            header += ', ext="' + hExt + '"'
+            h_ext = util.check_header_attribute(artifacts['ext']).replace('\\', '\\\\').replace('\n', '\\n')
+            header += ', ext="' + h_ext + '"'
 
         header += ', mac="' + mac + '"'
 
@@ -137,7 +146,7 @@ class Client(object):
         }
         """
         if not isinstance(response, dict) or 'headers' not in response:
-            return false
+            return False
 
         if 'content-type' not in response['headers']:
             print "WARNING response lacked content-type"
@@ -150,10 +159,10 @@ class Client(object):
             options['required'] = False        
 
         if 'www-authenticate' in response['headers']:
-            www_auth_attrs = util.parseAuthorizationHeader(res['headers']['www-authenticate'], ['ts', 'tsm', 'error']);
+            www_auth_attrs = util.parse_authorization_header(response['headers']['www-authenticate'], ['ts', 'tsm', 'error'])
 
             if 'ts' in www_auth_attrs:
-                ts_mac = hcrypto.calculateTsMac(www_auth_attrs['ts'], credentials)
+                ts_mac = hcrypto.calculate_ts_mac(www_auth_attrs['ts'], credentials)
                 if not ts_mac == www_auth_attrs['ts']:
                     print ts_mac + " didn't match " + www_auth_attrs['ts']
                     return False
@@ -165,7 +174,7 @@ class Client(object):
             print "Unable to verify, no server-authorization header"
             return False
 
-        s_auth_attrs = util.parseAuthorizationHeader(response['headers']['server-authorization'], ['mac', 'ext', 'hash']);
+        s_auth_attrs = util.parse_authorization_header(response['headers']['server-authorization'], ['mac', 'ext', 'hash'])
         if 'ext' in s_auth_attrs:
             artifacts['ext'] = s_auth_attrs['ext']
         else:
@@ -173,7 +182,7 @@ class Client(object):
 
         artifacts['hash'] = s_auth_attrs['hash']
 
-        mac = hcrypto.calculateMac('response', credentials, artifacts)
+        mac = hcrypto.calculate_mac('response', credentials, artifacts)
         if not mac == s_auth_attrs['mac']:
             print "server-auth mac mismatch " + mac + " != " + s_auth_attrs['mac']
             return False
@@ -184,7 +193,7 @@ class Client(object):
         if 'hash' not in s_auth_attrs:
             return False
 
-        p_mac = hcrypto.calculatePayloadHash(options['payload'], credentials['algorithm'], response['headers']['content-type'])
+        p_mac = hcrypto.calculate_payload_hash(options['payload'], credentials['algorithm'], response['headers']['content-type'])
         if not p_mac == s_auth_attrs['hash']:
             print "p_mac " + p_mac + " != " + s_auth_attrs['hash']
         return p_mac == s_auth_attrs['hash']

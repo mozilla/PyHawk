@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-# GO HAWKS!
-
 """
 Python library for HAWK
 ~~~~~~~~~~~~~~~~~~~~
@@ -26,7 +24,10 @@ try:  # Python 2.7+
     from logging import NullHandler
 except ImportError:
     class NullHandler(logging.Handler):
+        """ Install a null handler. """
+
         def emit(self, record):
+            """ No-op. """
             pass
 
 logging.getLogger(__name__).addHandler(NullHandler())
