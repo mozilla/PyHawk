@@ -10,7 +10,7 @@ PyHawk is great for consuming or providing webservices from Python.
 Status
 ------
 
-This is under development, not ready for primetime.
+This is under development, ready for adventurous users.
 There doesn't appear to be a Python library for HAWK.
 Let me know if there is already a robust library.
 
@@ -50,8 +50,8 @@ Plan
 
 Iterate on a python library until it can communicate with the test client/server.
 
-1) Write Server API
-2) Write client API
+1) ✓ Write Server API
+2) ✓ Write client API
 3) Improve code style
 4) Make API elegant
 
@@ -59,3 +59,5 @@ Status
 ------
 
 Client and Server APIs are working according to the Node.js implementation. W00t!
+
+Please file issues for code style, bugs, etc.
