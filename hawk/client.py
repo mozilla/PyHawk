@@ -125,3 +125,66 @@ class Client(object):
         result['field'] = header
 
         return result
+
+    def authenticate(self, response, credentials, artifacts, options=None):
+        """ Validate server response.
+
+        response: dictionary with server response
+        artifacts:  object recieved from header().artifacts
+        options: {
+        payload:    optional payload received
+        required:   specifies if a Server-Authorization header is required. Defaults to 'false'
+        }
+        """
+        if not isinstance(response, dict) or 'headers' not in response:
+            return false
+
+        if 'content-type' not in response['headers']:
+            print "WARNING response lacked content-type"
+            response['headers']['content-type'] = 'text/plain'
+
+        if options is None:
+            options = {}
+
+        if 'required' not in options:
+            options['required'] = False        
+
+        if 'www-authenticate' in response['headers']:
+            www_auth_attrs = util.parseAuthorizationHeader(res['headers']['www-authenticate'], ['ts', 'tsm', 'error']);
+
+            if 'ts' in www_auth_attrs:
+                ts_mac = hcrypto.calculateTsMac(www_auth_attrs['ts'], credentials)
+                if not ts_mac == www_auth_attrs['ts']:
+                    print ts_mac + " didn't match " + www_auth_attrs['ts']
+                    return False
+
+        if 'server-authorization' not in response['headers'] and False == options['required']:
+            return True
+
+        if 'server-authorization' not in response['headers']:
+            print "Unable to verify, no server-authorization header"
+            return False
+
+        s_auth_attrs = util.parseAuthorizationHeader(response['headers']['server-authorization'], ['mac', 'ext', 'hash']);
+        if 'ext' in s_auth_attrs:
+            artifacts['ext'] = s_auth_attrs['ext']
+        else:
+            artifacts['ext'] = ''
+
+        artifacts['hash'] = s_auth_attrs['hash']
+
+        mac = hcrypto.calculateMac('response', credentials, artifacts)
+        if not mac == s_auth_attrs['mac']:
+            print "server-auth mac mismatch " + mac + " != " + s_auth_attrs['mac']
+            return False
+
+        if 'payload' in options:
+            return True
+
+        if 'hash' not in s_auth_attrs:
+            return False
+
+        p_mac = hcrypto.calculatePayloadHash(options['payload'], credentials['algorithm'], response['headers']['content-type'])
+        if not p_mac == s_auth_attrs['hash']:
+            print "p_mac " + p_mac + " != " + s_auth_attrs['hash']
+        return p_mac == s_auth_attrs['hash']

@@ -48,12 +48,17 @@ def simple_app(environ, start_response):
         status = '200 OK'
         auth = server.header(credentials, artifacts, { 'payload': payload,
                                                             'contentType': 'text/plain'})
-        headers = [('Content-type', 'text/plain'), ('Server-Authorization', auth)]
+
+        print "SERVER HEADER AUTH=" + auth
+
+        headers = [('Content-Type', 'text/plain'), ('Server-Authorization', auth)]
+
+        print headers
 
         start_response(status, headers)
 
         return payload
-    except (hawk.BadRequest, hawk.BadMac):
+    except (hawk.BadRequest, hawk.BadMac, hawk.util.BadRequest):
         start_response('401 Unauthorized', [])
         return 'Please authenticate'
 

@@ -33,7 +33,7 @@ class Server(object):
 
         self.checkOptions(options)
 
-        attributes = self.parseAuthorizationHeader(req['headers']['authorization'])
+        attributes = util.parseAuthorizationHeader(req['headers']['authorization'])
 
         artifacts = self.prepareArtifacts(req, attributes)
 
@@ -87,59 +87,6 @@ class Server(object):
                 # I think we want empty strings in normalized header mac
                 artifacts[key] = ''
         return artifacts
-            
-
-    def parseAuthorizationHeader(self, authHeader):
-        """
-        Example Authorization header:
-        'Hawk id="dh37fgj492je", ts="1367076201", nonce="NPHgnG", ext="and welcome!", mac="CeWHy4d9kbLGhDlkyw2Nh3PJ7SDOdZDa267KH4ZaNMY="'
-        """
-        if not authHeader:
-            raise BadRequest
-        attributes = {}
-        parts = authHeader.split(',')
-        authSchemeParts = parts[0].split(' ')
-        if not 'hawk' == authSchemeParts[0].lower():
-            print "Unknown scheme: " + authSchemeParts[0].lower()
-            raise BadRequest
-
-        # Replace 'Hawk key: value' with 'key: value' which matches the rest of parts
-        parts[0] = authSchemeParts[1]
-
-        allowableKeys = ['id', 'ts', 'nonce', 'hash', 'ext', 'mac', 'app', 'dlg']
-        requiredKeys = ['id', 'ts', 'nonce', 'mac']
-
-        for part in parts:
-            attrParts = part.split('=')
-            key = attrParts[0].strip()
-            if key not in allowableKeys:
-                print "Unknown Hawk key_" + attrParts[0] + "_"
-                raise BadRequest
-
-            # mac value includes '=' character... fixup
-            if 'mac' == key and len(attrParts) == 3:
-                attrParts[1] += '=' + attrParts[2]
-
-            # Chop of quotation marks
-            value = attrParts[1]
-
-            if attrParts[1].find('"') == 0:
-                value = attrParts[1][1:]
-
-            if value.find('"') > 0:
-                value = value[0:-1]
-            
-            util.checkHeaderAttribute(value)
-
-            if key in attributes:
-                raise BadRequest
-
-            attributes[key] = value
-
-        for rKey in requiredKeys:
-            if rKey not in attributes.keys():
-                raise BadRequest
-        return attributes
 
     def header(self, credentials, artifacts, options=None):
         """ Generate a Server-Authorization header for a given response.

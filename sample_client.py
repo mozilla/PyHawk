@@ -23,3 +23,12 @@ headers = [('Authorization', header['field'])]
 r = requests.get(url, data=params, headers=headers)
 
 print str(r.status_code) + ' ' + r.text
+
+response = {
+    'headers': r.headers
+}
+
+if client.authenticate(response, credentials, header['artifacts'], { 'payload': r.text }):
+    print "(valid)"
+else:
+    print "(invalid)"
