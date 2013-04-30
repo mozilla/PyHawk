@@ -6,15 +6,16 @@ You can run this server and point HAWK's client.js at it.
 
 Or you can point sample_client.py at it.
 """
+from wsgiref.util import setup_testing_defaults
+from wsgiref.simple_server import make_server
+
+import hawk
+
 
 def main():
     """
     Run the sample_server.py from the CLI
     """
-    from wsgiref.util import setup_testing_defaults
-    from wsgiref.simple_server import make_server
-
-    import hawk
 
     def simple_app(environ, start_response):
         """
@@ -54,27 +55,56 @@ def main():
                         'key': 'werxhqb98rpaxn39848xrunpaw3489ruxnpa98w4rxn'
         }
 
-        try:
-            artifacts = server.authenticate(req, credentials, {})
-            payload = 'Hello ' + credentials['id'] + ' ' + artifacts['ext']
-            status = '200 OK'
-            auth = server.header(credentials, artifacts,
-                                 { 'payload': payload,
-                                   'contentType': 'text/plain' })
-
-            headers = [('Content-Type', 'text/plain'),
-                       ('Server-Authorization', auth)]
-
-            start_response(status, headers)
-
-            return payload
-        except (hawk.BadRequest, hawk.BadMac, hawk.util.BadRequest):
-            start_response('401 Unauthorized', [])
-            return 'Please authenticate'
+        if url.find('bewit=') == -1:
+            print "HAWK based authentication"
+            return hawk_authentication(start_response, server, req, credentials)
+        else:
+            print "Bewit based authentication"
+            return hawk_bewit_authentication(start_response, server, req, credentials)
 
     httpd = make_server('', 8002, simple_app)
     print "Serving on port 8002..."
     httpd.serve_forever()
+
+def hawk_authentication(start_response, server, req, credentials):
+    try:
+        artifacts = server.authenticate(req, credentials, {})
+        payload = 'Hello ' + credentials['id'] + ' ' + artifacts['ext']
+        status = '200 OK'
+        auth = server.header(credentials, artifacts,
+                             { 'payload': payload,
+                               'contentType': 'text/plain' })
+
+        headers = [('Content-Type', 'text/plain'),
+                   ('Server-Authorization', auth)]
+
+        start_response(status, headers)
+
+        return payload
+    except (hawk.BadRequest, hawk.BadMac, hawk.util.BadRequest):
+        start_response('401 Unauthorized', [])
+        return 'Please authenticate'
+
+def hawk_bewit_authentication(start_response, server, req, credentials):
+    options = {}
+    try:
+        if server.authenticate_bewit(req, credentials, options):
+
+            payload = 'Hello ' + credentials['id']
+            status = '200 OK'
+
+            headers = [('Content-Type', 'text/plain')]
+
+            start_response(status, headers)
+            return payload
+        else:
+            print "Bad Bewit, sending 401"
+            start_response('401 Unauthorized', [])
+            return 'Please authenticate'
+    except (hawk.BadRequest, hawk.BadMac, hawk.util.BadRequest, hawk.InvalidBewit, hawk.BewitExpired):
+        print "Exception, sending 401"
+        start_response('401 Unauthorized', [])
+        return 'Please authenticate'
 
 if __name__ == '__main__':
     main()

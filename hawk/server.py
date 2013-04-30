@@ -12,6 +12,7 @@ Python library for HAWK
 import copy
 import math
 import time
+from urlparse import urlparse, parse_qs
 
 import hawk.hcrypto as hcrypto
 import hawk.util as util
@@ -29,6 +30,10 @@ class BadRequest(Exception):
 
 class MissingCredentials(Exception):
     """Exception raised for bad security configuration."""
+    pass
+
+class BewitExpired(Exception):
+    """Exception raised when Bewit url has expired."""
     pass
 
 
@@ -179,3 +184,88 @@ class Server(object):
 
         if 'localtimeOffsetMsec' not in options:
             options['localtimeOffsetMsec'] = 0
+
+    def authenticate_bewit(self, req, credentials, options):
+        """Authenticate bewit one time requests.
+
+        Compatibility Note: HAWK exposes this as hawk.uri.authenticate
+
+        req is a dict with the keys:
+        url
+        method
+
+
+        Optional options: 'hostHeaderName', 'localtimeOffsetMsec'
+        
+        """
+        if not valid_bewit_args(req, options):            
+            return False
+        now = time.time() + int(options['localtime_offset_msec'])
+
+        url = urlparse(req['url'])
+        qs = parse_qs(url.query)
+
+        if not 'bewit' in qs or len(qs['bewit']) != 1 or \
+                len(qs['bewit'][0]) == 0:
+            print "No bewit query string parameter"
+            return False
+
+        bewit = hcrypto.explode_bewit(qs['bewit'][0])
+
+        original_url = normalize_url_without_bewit(req['url'], qs['bewit'][0])
+
+        if bewit['exp'] < now:
+            raise BewitExpired
+
+        options['ts'] = bewit['exp']
+
+        artifacts = {
+            'ts': bewit['exp'],
+            'nonce': '',
+            'method': 'GET',
+            'resource': original_url,
+            'host': req['host'],
+            'port': req['port'],
+            'ext': bewit['ext']
+        }
+
+        mac = hcrypto.calculate_mac('bewit', credentials, artifacts, True)
+
+        # TODO mitigate timing attack
+        if mac != bewit['mac']:
+            print "bewit " + mac + " didn't match " + bewit['mac']
+            raise BadRequest
+
+        return True
+        
+
+def valid_bewit_args(req, options):
+    """Validates inputs and sets defaults for options."""
+
+    if 'url' not in req or 'method' not in req:
+        print "missing url or method in request"
+        raise BadRequest
+
+    if 'GET' != req['method'] and 'HEAD' != req['method']:
+        print "Bad Method"
+        raise BadRequest
+
+    if 'headers' in req and 'authorization' in req['headers'] and \
+            len(req['headers']['authorization']) > 0:
+        print "ERROR: Attempt to use auth header and bewit"
+        raise BadRequest
+
+    if 'localtime_offset_msec' not in options or \
+            options['localtime_offset_msec'] is None:
+        options['localtime_offset_msec'] = 0
+
+    return True
+
+def normalize_url_without_bewit(url, bewit):
+    """Normalizes url by removing bewit parameter."""
+    bewit_pos = url.find('bewit=')
+    # Chop off the last character before 'bewit=' which is either a ? or a &
+    bewit_pos -= 1
+    bewit_end = bewit_pos + len("bewit=" + bewit) + 1
+    o_url = ''.join([url[0:bewit_pos], url[bewit_end:]])
+    return o_url

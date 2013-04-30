@@ -44,5 +44,8 @@ def main():
     else:
         print "(invalid)"
 
+    print "Generating bewit url"
+    print url + '&bewit=' + client.get_bewit(url, {'credentials': credentials, 'ttl_sec': 60 * 1000})
+
 if __name__ == '__main__':
     main()

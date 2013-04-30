@@ -10,6 +10,7 @@ from urlparse import urlparse
 
 import hawk.hcrypto as hcrypto
 import hawk.util as util
+from hawk.server import BadRequest
 
 
 class Client(object):
@@ -68,12 +69,7 @@ class Client(object):
         if 'nonce' not in options:
             options['nonce'] = hcrypto.random_string(6)
 
-        url_parts = urlparse(url)
-        if url_parts.port is None:
-            if url_parts.scheme == 'http':
-                url_parts.port = 80
-            elif url_parts.scheme == 'https':
-                url_parts.port = 443
+        url_parts = parse_normalized_url(url)
 
         # TODO use None or '' for these optional artifacts?
         if 'hash' not in options:
@@ -206,3 +202,91 @@ class Client(object):
         if not p_mac == s_auth_attrs['hash']:
             print "p_mac " + p_mac + " != " + s_auth_attrs['hash']
         return p_mac == s_auth_attrs['hash']
+
+    def get_bewit(self, uri, options=None):
+        """
+        Generate a bewit value for a given URI
+
+        Compatibility Note: HAWK exposes this as hawk.uri.getBewit
+
+        credentials is an object with the following keys: 'id, 'key', 'algorithm'.
+        options is an object with the following optional keys: 'ext', 'localtime_offset_msec'
+
+        uri: 'http://example.com/resource?a=b' or object from Url.parse()
+        options: {
+
+            Required
+
+            credentials: {
+                id: 'dh37fgj492je',
+                key: 'aoijedoaijsdlaksjdl',
+                algorithm: 'sha256'                             // 'sha1', 'sha256'
+            },
+            ttl_sec: 60 * 60,                                    // TTL in seconds
+
+            Optional
+
+            ext: 'application-specific',                        // Application specific data sent via the ext attribute
+            localtime_offset_msec: 400                            // Time offset to sync with server time
+        }
+        """
+
+        if not valid_bewit_args(uri, options):
+            return ''
+
+        now = time.time() + int(options['localtime_offset_msec'])
+
+        creds = options['credentials']
+        if 'id' not in creds or 'key' not in creds or 'algorithm' not in creds:
+            raise BadRequest
+
+        url_parts = parse_normalized_url(uri)
+
+        exp = now + int(options['ttl_sec'])
+
+        resource = url_parts.path
+        if len(url_parts.query) > 0:
+            resource += '?' + url_parts.query
+
+        artifacts = {
+            'ts': int(exp),
+            'nonce': '',
+            'method': 'GET',
+            'resource': resource,
+            'host': url_parts.hostname,
+            'port': str(url_parts.port),
+            'ext': options['ext']
+        }
+
+        return hcrypto.calculate_bewit(creds, artifacts, exp)
+
+
+def valid_bewit_args(uri, options):
+    """Validates inputs and sets defaults for options."""
+    if uri is None or options is None:
+        raise BadRequest
+
+    if not isinstance(uri, basestring) or not isinstance(options, dict):
+        return False
+
+    if not 'ttl_sec' in options:
+        return False
+
+    if 'ext' not in options or options['ext'] is None:
+        options['ext'] = ''
+
+    if 'localtime_offset_msec' not in options or \
+            options['localtime_offset_msec'] is None:
+        options['localtime_offset_msec'] = 0
+
+    return True
+
+def parse_normalized_url(url):
+    """Parse url and set port."""
+    url_parts = urlparse(url)
+    if url_parts.port is None:
+        if url_parts.scheme == 'http':
+            url_parts.port = 80
+        elif url_parts.scheme == 'https':
+            url_parts.port = 443
+    return url_parts
