@@ -36,7 +36,6 @@ var handler = function (req, res) {
     Hawk.server.authenticate(req, credentialsFunc, {}, function (err, credentials, artifacts) {
 
         var serverAuth = Hawk.server.header(credentials, artifacts, { payload: payload, contentType: 'text/plain' });
-	console.log('serverAuth', serverAuth);
 
         var payload = (!err ? 'Hello ' + credentials.user + ' ' + artifacts.ext : 'Shoosh!');
         var headers = {
