@@ -40,14 +40,14 @@ class BewitExpired(util.HawkException):
 class Server(object):
     """Object with authenticate and header methods."""
 
-    def __init__(self, req, credentialsFn):
+    def __init__(self, req, credentials_fn):
         """Initialize a Server object.
         req - a request object
-        credentialsFn - Callback function to lookup a dict of:
+        credentials_fn - Callback function to lookup a dict of:
             id, key, algorithm
         """
         self.req = req
-        self.credentialsFn = credentialsFn
+        self.credentials_fn = credentials_fn
 
     def authenticate(self, req, options):
         """
@@ -67,7 +67,7 @@ class Server(object):
             req['headers']['authorization'])
 
         artifacts = self._prepare_artifacts(req, attributes)
-        credentials = self.credentialsFn(attributes['id'])
+        credentials = self.credentials_fn(attributes['id'])
         mac = self._calculate_mac(credentials, artifacts)
 
         # TODO prevent timing attach
@@ -155,7 +155,7 @@ class Server(object):
         if 'ext' in options:
             h_artifacts['ext'] = options['ext']
 
-        credentials = self.credentialsFn(h_artifacts['id'])
+        credentials = self.credentials_fn(h_artifacts['id'])
         if not credentials or 'key' not in credentials or \
                 'algorithm' not in credentials:
             return ''
