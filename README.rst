@@ -52,7 +52,7 @@ Iterate on a python library until it can communicate with the test client/server
 
 1) ✓ Write Server API
 2) ✓ Write client API
-3) Switch to callback style
+3) ✓ Switch to callback style
 4) Improve code style
 5) Make API elegant
 

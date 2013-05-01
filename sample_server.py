@@ -48,33 +48,35 @@ def main():
             }
         }
 
-        server = hawk.Server(req)
-
         # Look up from DB or elsewhere
-        credentials = { 'id': 'dh37fgj492je',
-                        'algorithm': 'sha256',
-                        'key': 'werxhqb98rpaxn39848xrunpaw3489ruxnpa98w4rxn'
+        credentials = { 
+            'dh37fgj492je': {
+                'id': 'dh37fgj492je',
+                'algorithm': 'sha256',
+                'key': 'werxhqb98rpaxn39848xrunpaw3489ruxnpa98w4rxn'
+                }
         }
+        
+        server = hawk.Server(req, lambda cid: credentials[cid])
 
         if url.find('bewit=') == -1:
             print "HAWK based authentication"
-            return hawk_authentication(start_response, server, req, credentials)
+            return hawk_authentication(start_response, server, req)
         else:
             print "Bewit based authentication"
-            return hawk_bewit_authentication(start_response, server, req,
-                                             credentials)
+            return hawk_bewit_authentication(start_response, server, req)
 
     httpd = make_server('', 8002, simple_app)
     print "Serving on port 8002..."
     httpd.serve_forever()
 
-def hawk_authentication(start_response, server, req, credentials):
+def hawk_authentication(start_response, server, req):
     """Authenticate the request using HAWK."""
     try:
-        artifacts = server.authenticate(req, credentials, {})
-        payload = 'Hello ' + credentials['id'] + ' ' + artifacts['ext']
+        artifacts = server.authenticate(req, {})
+        payload = 'Hello ' + artifacts['ext']
         status = '200 OK'
-        auth = server.header(credentials, artifacts,
+        auth = server.header(artifacts,
                              { 'payload': payload,
                                'contentType': 'text/plain' })
 
@@ -88,13 +90,13 @@ def hawk_authentication(start_response, server, req, credentials):
         start_response('401 Unauthorized', [])
         return 'Please authenticate'
 
-def hawk_bewit_authentication(start_response, server, req, credentials):
+def hawk_bewit_authentication(start_response, server, req):
     """Authenticate the request using a Bewit from HAWK."""
     options = {}
     try:
-        if server.authenticate_bewit(req, credentials, options):
+        if server.authenticate_bewit(req, options):
 
-            payload = 'Hello ' + credentials['id']
+            payload = 'Hello '
             status = '200 OK'
 
             headers = [('Content-Type', 'text/plain')]
