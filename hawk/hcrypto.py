@@ -4,21 +4,23 @@
 Crypto functions for HAWK authentication
 """
 
-from base64 import b64encode, b64decode, urlsafe_b64encode, urlsafe_b64decode
+from base64 import b64encode, urlsafe_b64encode, urlsafe_b64decode
 import hashlib
 import hmac
 import random
 import string
 
+from hawk.util import HawkException
+
 
 HAWK_VER = 1
 
 
-class UnknownAlgorithm(Exception):
+class UnknownAlgorithm(HawkException):
     """Exception raised for bad configuration of algorithm."""
     pass
 
-class InvalidBewit(Exception):
+class InvalidBewit(HawkException):
     """Exception raised for invalid bewit value."""
     pass
 

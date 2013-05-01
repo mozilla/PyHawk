@@ -16,8 +16,10 @@ __copyright__ = 'Copyright 2013 Mozilla'
 
 
 from .client import Client
-from .server import Server, BadRequest, BadMac, MissingCredentials, BewitExpired
+from .server import Server
 from .hcrypto import InvalidBewit
+from .util import HawkException
+
 
 # Set default logging handler to avoid "No handler found" warnings.
 import logging

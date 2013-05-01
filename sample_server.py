@@ -10,6 +10,7 @@ from wsgiref.util import setup_testing_defaults
 from wsgiref.simple_server import make_server
 
 import hawk
+from hawk.util import HawkException
 
 
 def main():
@@ -60,13 +61,15 @@ def main():
             return hawk_authentication(start_response, server, req, credentials)
         else:
             print "Bewit based authentication"
-            return hawk_bewit_authentication(start_response, server, req, credentials)
+            return hawk_bewit_authentication(start_response, server, req,
+                                             credentials)
 
     httpd = make_server('', 8002, simple_app)
     print "Serving on port 8002..."
     httpd.serve_forever()
 
 def hawk_authentication(start_response, server, req, credentials):
+    """Authenticate the request using HAWK."""
     try:
         artifacts = server.authenticate(req, credentials, {})
         payload = 'Hello ' + credentials['id'] + ' ' + artifacts['ext']
@@ -81,11 +84,12 @@ def hawk_authentication(start_response, server, req, credentials):
         start_response(status, headers)
 
         return payload
-    except (hawk.BadRequest, hawk.BadMac, hawk.util.BadRequest):
+    except (HawkException):
         start_response('401 Unauthorized', [])
         return 'Please authenticate'
 
 def hawk_bewit_authentication(start_response, server, req, credentials):
+    """Authenticate the request using a Bewit from HAWK."""
     options = {}
     try:
         if server.authenticate_bewit(req, credentials, options):
@@ -101,7 +105,7 @@ def hawk_bewit_authentication(start_response, server, req, credentials):
             print "Bad Bewit, sending 401"
             start_response('401 Unauthorized', [])
             return 'Please authenticate'
-    except (hawk.BadRequest, hawk.BadMac, hawk.util.BadRequest, hawk.InvalidBewit, hawk.BewitExpired):
+    except (HawkException):
         print "Exception, sending 401"
         start_response('401 Unauthorized', [])
         return 'Please authenticate'

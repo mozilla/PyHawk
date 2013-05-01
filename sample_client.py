@@ -17,9 +17,8 @@ def main():
     credentials = {
         'id': 'dh37fgj492je',
         'key': 'werxhqb98rpaxn39848xrunpaw3489ruxnpa98w4rxn',
-        'algorithm': 'sha256',
-        'user': 'Steve'
-        }
+        'algorithm': 'sha256'
+    }
 
     url = 'http://127.0.0.1:8002/resource/1?b=1&a=2'
     params = {'b': 1, 'a': 2}
@@ -36,7 +35,7 @@ def main():
 
     response = {
         'headers': res.headers
-        }
+    }
 
     if client.authenticate(response, credentials, header['artifacts'],
                            { 'payload': res.text }):
@@ -45,7 +44,8 @@ def main():
         print "(invalid)"
 
     print "Generating bewit url"
-    print url + '&bewit=' + client.get_bewit(url, {'credentials': credentials, 'ttl_sec': 60 * 1000})
+    print url + '&bewit=' + client.get_bewit(url, {'credentials': credentials,
+                                                   'ttl_sec': 60 * 1000})
 
 if __name__ == '__main__':
     main()

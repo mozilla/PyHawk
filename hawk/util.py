@@ -4,13 +4,17 @@
 Various low level helper functions for HAWK authentication.
 """
 
+class HawkException(Exception):
+    """Base class for HAWK Exceptions."""
+    pass
 
-class BadRequest(Exception):
+
+class BadRequest(HawkException):
     """ Exception raised for bad inputs on request. """
     pass
 
 
-class ParseError(Exception):
+class ParseError(HawkException):
     """ Exception raised for bad values. """
     pass
 

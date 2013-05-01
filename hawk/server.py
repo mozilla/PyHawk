@@ -18,21 +18,21 @@ import hawk.hcrypto as hcrypto
 import hawk.util as util
 
 
-class BadMac(Exception):
+class BadMac(util.HawkException):
     """Exception raised for mac mismatch."""
     pass
 
 
-class BadRequest(Exception):
+class BadRequest(util.HawkException):
     """Exception raised for bad inputs on request."""
     pass
 
 
-class MissingCredentials(Exception):
+class MissingCredentials(util.HawkException):
     """Exception raised for bad security configuration."""
     pass
 
-class BewitExpired(Exception):
+class BewitExpired(util.HawkException):
     """Exception raised when Bewit url has expired."""
     pass
 
