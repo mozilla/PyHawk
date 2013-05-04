@@ -149,8 +149,7 @@ class Server(object):
         h_artifacts = copy.copy(artifacts)
         del h_artifacts['mac']
 
-        if 'hash' in options:
-            h_artifacts['hash'] = options['hash']
+        h_artifacts['hash'] = options.get('hash', None)
 
         if 'ext' in options:
             h_artifacts['ext'] = options['ext']
