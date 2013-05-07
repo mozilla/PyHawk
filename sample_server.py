@@ -61,19 +61,19 @@ def main():
 
         if url.find('bewit=') == -1:
             print "HAWK based authentication"
-            return hawk_authentication(start_response, server, req)
+            return hawk_authentication(start_response, server)
         else:
             print "Bewit based authentication"
-            return hawk_bewit_authentication(start_response, server, req)
+            return hawk_bewit_authentication(start_response, server)
 
     httpd = make_server('', 8002, simple_app)
     print "Serving on port 8002..."
     httpd.serve_forever()
 
-def hawk_authentication(start_response, server, req):
+def hawk_authentication(start_response, server):
     """Authenticate the request using HAWK."""
     try:
-        artifacts = server.authenticate(req, {})
+        artifacts = server.authenticate({})
         payload = 'Hello ' + artifacts['ext']
         status = '200 OK'
         auth = server.header(artifacts,
@@ -90,11 +90,11 @@ def hawk_authentication(start_response, server, req):
         start_response('401 Unauthorized', [])
         return 'Please authenticate'
 
-def hawk_bewit_authentication(start_response, server, req):
+def hawk_bewit_authentication(start_response, server):
     """Authenticate the request using a Bewit from HAWK."""
     options = {}
     try:
-        if server.authenticate_bewit(req, options):
+        if server.authenticate_bewit(options):
 
             payload = 'Hello '
             status = '200 OK'

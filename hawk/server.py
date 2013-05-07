@@ -49,7 +49,7 @@ class Server(object):
         self.req = req
         self.credentials_fn = credentials_fn
 
-    def authenticate(self, req, options):
+    def authenticate(self, options):
         """
 
         options can have the following
@@ -64,9 +64,9 @@ class Server(object):
         self._check_options(options)
 
         attributes = util.parse_authorization_header(
-            req['headers']['authorization'])
+            self.req['headers']['authorization'])
 
-        artifacts = self._prepare_artifacts(req, attributes)
+        artifacts = self._prepare_artifacts(attributes)
         credentials = self.credentials_fn(attributes['id'])
         mac = self._calculate_mac(credentials, artifacts)
 
@@ -81,7 +81,7 @@ class Server(object):
                 raise BadRequest
             p_hash = hcrypto.calculate_payload_hash(options['payload'],
                                                     credentials['algorithm'],
-                                                    req['contentType'])
+                                                    self.req['contentType'])
             if not p_hash == attributes['hash']:
                 print "Bad payload hash"
                 raise BadRequest
@@ -107,13 +107,13 @@ class Server(object):
 
         return mac
 
-    def _prepare_artifacts(self, req, attributes):
+    def _prepare_artifacts(self, attributes):
         """Converts the request and attributes into an artifacts dict."""
         artifacts = {
-            'method': req['method'],
-            'host': req['host'],
-            'port': req['port'],
-            'resource': req['url']
+            'method': self.req['method'],
+            'host': self.req['host'],
+            'port': self.req['port'],
+            'resource': self.req['url']
         }
         artifact_keys = ['ts', 'nonce', 'hash', 'ext',
                          'app', 'dlg', 'mac', 'id']
@@ -191,7 +191,7 @@ class Server(object):
         if 'localtimeOffsetMsec' not in options:
             options['localtimeOffsetMsec'] = 0
 
-    def authenticate_bewit(self, req, options):
+    def authenticate_bewit(self, options):
         """Authenticate bewit one time requests.
 
         Compatibility Note: HAWK exposes this as hawk.uri.authenticate
@@ -204,11 +204,11 @@ class Server(object):
         Optional options: 'hostHeaderName', 'localtimeOffsetMsec'
         
         """
-        if not valid_bewit_args(req, options):            
+        if not valid_bewit_args(self.req, options):            
             return False
         now = time.time() + int(options['localtime_offset_msec'])
 
-        url = urlparse(req['url'])
+        url = urlparse(self.req['url'])
         qs = parse_qs(url.query)
 
         if not 'bewit' in qs or len(qs['bewit']) != 1 or \
@@ -218,7 +218,7 @@ class Server(object):
 
         bewit = hcrypto.explode_bewit(qs['bewit'][0])
 
-        original_url = normalize_url_without_bewit(req['url'], qs['bewit'][0])
+        original_url = normalize_url_without_bewit(self.req['url'], qs['bewit'][0])
 
         if bewit['exp'] < now:
             raise BewitExpired
@@ -230,8 +230,8 @@ class Server(object):
             'nonce': '',
             'method': 'GET',
             'resource': original_url,
-            'host': req['host'],
-            'port': req['port'],
+            'host': self.req['host'],
+            'port': self.req['port'],
             'ext': bewit['ext']
         }
 

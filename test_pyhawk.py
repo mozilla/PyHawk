@@ -76,7 +76,7 @@ class HawkTestCase(unittest.TestCase):
             }
 
         server = hawk.Server(req, lambda cid: CREDS[cid])
-        assert server.authenticate_bewit(req, {})
+        assert server.authenticate_bewit({})
 
     def test_server_api(self):
         url = '/bazz?buzz=fizz&mode=ala'
@@ -92,7 +92,7 @@ class HawkTestCase(unittest.TestCase):
             }
         server = hawk.Server(req, lambda cid: CREDS[cid])
         # Add 100 plus the difference between now and our hardcoded timestamp
-        artifacts = server.authenticate(req, {'timestampSkewSec': time.time() - 1367927332 + 100})
+        artifacts = server.authenticate({'timestampSkewSec': time.time() - 1367927332 + 100})
 
         assert artifacts == {
             'nonce': 'lwfuar', 'ext': 'and welcome!', 'dlg': '',
