@@ -81,17 +81,17 @@ class Client(object):
         if 'dlg' not in options:
             options['dlg'] = None
 
-        resource = url_parts.path
-        if len(url_parts.query) > 0:
-            resource += '?' + url_parts.query
+        resource = url_parts['path']
+        if len(url_parts['query']) > 0:
+            resource += '?' + url_parts['query']
 
         artifacts = {
             'ts': int(timestamp),
             'nonce': options['nonce'],
             'method': method,
             'resource': resource,
-            'host': url_parts.hostname,
-            'port': url_parts.port,
+            'host': url_parts['hostname'],
+            'port': url_parts['port'],
             'hash': options['hash'],
             'ext': options['ext'],
             'app': options['app'],
@@ -244,17 +244,17 @@ class Client(object):
 
         exp = now + int(options['ttl_sec'])
 
-        resource = url_parts.path
-        if len(url_parts.query) > 0:
-            resource += '?' + url_parts.query
+        resource = url_parts['path']
+        if len(url_parts['query']) > 0:
+            resource += '?' + url_parts['query']
 
         artifacts = {
             'ts': int(exp),
             'nonce': '',
             'method': 'GET',
             'resource': resource,
-            'host': url_parts.hostname,
-            'port': str(url_parts.port),
+            'host': url_parts['hostname'],
+            'port': str(url_parts['port']),
             'ext': options['ext']
         }
 
@@ -284,9 +284,17 @@ def valid_bewit_args(uri, options):
 def parse_normalized_url(url):
     """Parse url and set port."""
     url_parts = urlparse(url)
+    url_dict = {
+        'scheme': url_parts.scheme,
+        'hostname': url_parts.hostname,
+        'port': url_parts.port,
+        'path': url_parts.path,
+        'query': url_parts.query
+        
+    }
     if url_parts.port is None:
         if url_parts.scheme == 'http':
-            url_parts.port = 80
+            url_dict['port'] = 80
         elif url_parts.scheme == 'https':
-            url_parts.port = 443
-    return url_parts
+            url_dict['port'] = 443
+    return url_dict
