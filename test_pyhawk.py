@@ -63,6 +63,21 @@ class HawkTestCase(unittest.TestCase):
                 'payload': 'Hello and welcome!'
                 })
 
+    def test_bewit(self):
+        client = hawk.Client()
+        bewit = client.get_bewit(url, {'credentials': CREDS['foobar-1234'],
+                                       'ttl_sec': 60 * 1000})
+        req = {
+            'method': 'GET',
+            'url': '/bazz?buzz=fizz&mode=ala&bewit=' + bewit,
+            'host': 'example.com',
+            'port': 80,
+            'headers': {}
+            }
+
+        server = hawk.Server(req, lambda cid: CREDS[cid])
+        assert server.authenticate_bewit(req, {})
+
     def test_server_api(self):
         url = '/bazz?buzz=fizz&mode=ala'
 

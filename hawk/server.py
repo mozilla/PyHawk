@@ -191,7 +191,7 @@ class Server(object):
         if 'localtimeOffsetMsec' not in options:
             options['localtimeOffsetMsec'] = 0
 
-    def authenticate_bewit(self, req, credentials, options):
+    def authenticate_bewit(self, req, options):
         """Authenticate bewit one time requests.
 
         Compatibility Note: HAWK exposes this as hawk.uri.authenticate
@@ -235,6 +235,7 @@ class Server(object):
             'ext': bewit['ext']
         }
 
+        credentials = self.credentials_fn(bewit['id'])
         mac = hcrypto.calculate_mac('bewit', credentials, artifacts, True)
 
         # TODO mitigate timing attack
