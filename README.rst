@@ -17,6 +17,8 @@ Let me know if there is already a robust library.
 Development
 -----------
 
+Unit tests are in `test_pyhawk.py`. Additionally, one can test compatibility:
+
 The `tests/server` directory has a server.js and a client.js (Node code) which are from HAWK's usage.js.
 
 To test the server, do the following:
@@ -55,6 +57,11 @@ Iterate on a python library until it can communicate with the test client/server
 3) ✓ Switch to callback style
 4) Improve code style
 5) Make API elegant
+6) Put a release together
+
+A source for inspiration on 4 and 5 should be macauthlib_, from the Mozilla Services team, which is basically PyHawk, before Hawk existed. (Thanks rfk!)
+
+.. _macauthlib: https://github.com/mozilla-services/macauthlib
 
 Status
 ------
