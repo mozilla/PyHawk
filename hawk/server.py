@@ -32,6 +32,7 @@ class MissingCredentials(util.HawkException):
     """Exception raised for bad security configuration."""
     pass
 
+
 class BewitExpired(util.HawkException):
     """Exception raised when Bewit url has expired."""
     pass
@@ -42,16 +43,15 @@ class Server(object):
 
     def __init__(self, req, credentials_fn):
         """Initialize a Server object.
-        req - a request object
-        credentials_fn - Callback function to lookup a dict of:
-            id, key, algorithm
+        :param req: a request object
+        :param credentials_fn:
+            Callback function to lookup a dict of: id, key, algorithm
         """
         self.req = req
         self.credentials_fn = credentials_fn
 
     def authenticate(self, options):
         """
-
         options can have the following
         * checkNonceFn - A callback to validate if a given nonce is valid
         * timestampSkewSec - Allows for clock skew in seconds. Defaults to 60.
@@ -102,7 +102,7 @@ class Server(object):
         """Checks inputs and calculates MAC."""
         if 'key' not in credentials or 'algorithm' not in credentials:
             raise MissingCredentials
-        
+
         mac = hcrypto.calculate_mac('header', credentials, artifacts)
 
         return mac
@@ -130,14 +130,25 @@ class Server(object):
     def header(self, artifacts, options=None):
         """Generate a Server-Authorization header for a given response.
 
-    credentials: {},                                        // Object received from authenticate()
-    artifacts: {}                                           // Object received from authenticate(); 'mac', 'hash', and 'ext' - ignored
-    options: {
-        ext: 'application-specific',                        // Application specific data sent via the ext attribute
-        payload: '{"some":"payload"}',                      // UTF-8 encoded string for body hash generation (ignored if hash provided)
-        contentType: 'application/json',                    // Payload content-type (ignored if hash provided)
-        hash: 'U4MKKSmiVxk37JCCrAVIjV='                     // Pre-calculated payload hash
-    }
+        :param artifacts: A dict received from authenticate(). Contains the
+                          following keys 'mac', 'hash', and 'ext'.
+
+        :param options:
+            A dict with the following structure:
+
+            - ext: 'application-specific'
+                Application specific data sent via the ext attribute.
+
+            - payload: '{"some":"payload"}',
+                UTF-8 encoded string for body hash generation (ignored if hash
+                provided).
+
+            - contentType: 'application/json',
+                Payload content-type (ignored if hash provided)
+
+            - hash: 'U4MKKSmiVxk37JCCrAVIjV='
+                Pre-calculated payload hash
+        }
         """
         if options is None:
             options = {}
@@ -195,15 +206,12 @@ class Server(object):
 
         Compatibility Note: HAWK exposes this as hawk.uri.authenticate
 
-        req is a dict with the keys:
-        url
-        method
+        :param options:
+            A dict which may contain the 'hostHeaderName' and
+            'localtimeOffsetMsec' keys.
 
-
-        Optional options: 'hostHeaderName', 'localtimeOffsetMsec'
-        
         """
-        if not valid_bewit_args(self.req, options):            
+        if not valid_bewit_args(self.req, options):
             return False
         now = time.time() + int(options['localtime_offset_msec'])
 
@@ -217,7 +225,8 @@ class Server(object):
 
         bewit = hcrypto.explode_bewit(qs['bewit'][0])
 
-        original_url = normalize_url_without_bewit(self.req['url'], qs['bewit'][0])
+        original_url = normalize_url_without_bewit(self.req['url'],
+                                                   qs['bewit'][0])
 
         if bewit['exp'] < now:
             raise BewitExpired
@@ -243,7 +252,7 @@ class Server(object):
             raise BadRequest
 
         return True
-        
+
 
 def valid_bewit_args(req, options):
     """Validates inputs and sets defaults for options."""
@@ -266,6 +275,7 @@ def valid_bewit_args(req, options):
         options['localtime_offset_msec'] = 0
 
     return True
+
 
 def normalize_url_without_bewit(url, bewit):
     """Normalizes url by removing bewit parameter."""
