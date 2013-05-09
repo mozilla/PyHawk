@@ -20,6 +20,7 @@ class UnknownAlgorithm(HawkException):
     """Exception raised for bad configuration of algorithm."""
     pass
 
+
 class InvalidBewit(HawkException):
     """Exception raised for invalid bewit value."""
     pass
@@ -36,12 +37,14 @@ def calculate_mac(mac_type, credentials, options, url_encode=False):
         mac = b64encode(result.digest())
     return mac
 
+
 def module_for_algorithm(algorithm):
     """Returns a hashlib algorithm based on given string."""
     if 'sha256' == algorithm:
         return hashlib.sha256
     else:
         raise UnknownAlgorithm
+
 
 def normalize_string(mac_type, options):
     """Serializes mac_type and options into a HAWK string."""
@@ -75,6 +78,7 @@ def normalize_string(mac_type, options):
 
     return normalized
 
+
 def calculate_payload_hash(payload, algorithm, content_type):
     """Calculates a hash for a given payload."""
     p_hash = hashlib.new(algorithm)
@@ -87,12 +91,14 @@ def calculate_payload_hash(payload, algorithm, content_type):
     p_hash.update('\n')
     return b64encode(p_hash.digest())
 
+
 def parse_content_type(content_type):
     """Cleans up content_type."""
     if content_type:
         return content_type.split(';')[0].strip().lower()
     else:
         return ''
+
 
 def calculate_ts_mac(ts, credentials):
     """Calculates a timestamp message authentication code for HAWK."""
@@ -101,17 +107,21 @@ def calculate_ts_mac(ts, credentials):
     result = hmac.new(credentials['key'], data, digestmod)
     return b64encode(result.digest())
 
+
 def random_string(length):
     """Generates a random string for a given length."""
     return ''.join(random.choice(string.lowercase) for i in range(length))
+
 
 def calculate_bewit(credentials, artifacts, exp):
     """Calculates mac and formats a string for the bewit."""
     mac = calculate_mac('bewit', credentials, artifacts, True)
 
     # Construct bewit: id\exp\mac\ext
-    bewit = '\\'.join([credentials['id'], str(int(exp)), mac, artifacts['ext']])
+    bewit = '\\'.join([credentials['id'],
+                       str(int(exp)), mac, artifacts['ext']])
     return urlsafe_b64encode(bewit)
+
 
 def explode_bewit(bewit):
     """Decodes a bewit and returns a dict of the parts.
@@ -129,5 +139,3 @@ def explode_bewit(bewit):
         'mac': parts[2],
         'ext': parts[3]
     }
-
-    

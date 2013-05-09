@@ -4,6 +4,7 @@
 Various low level helper functions for HAWK authentication.
 """
 
+
 class HawkException(Exception):
     """Base class for HAWK Exceptions."""
     pass
@@ -20,7 +21,8 @@ class ParseError(HawkException):
 
 # Allowed attribute value characters: !#$%&'()*+,-./:;<=>?@[]^_`{|}~ and
 # space, a-z, A-Z, 0-9
-ALLOWABLE_CHARS = "!#$%&'()*+,-./:;<=>?@[]^_`{|}~ abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+ALLOWABLE_CHARS = ("!#$%&'()*+,-./:;<=>?@[]^_`{|}~ abcdefghijklmnopqrstuvwxyz"
+                   "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 
 
 def check_header_attribute(value):
@@ -30,10 +32,13 @@ def check_header_attribute(value):
             raise BadRequest
     return value
 
+
 def parse_authorization_header(auth_header, allowable_keys=None):
     """
     Example Authorization header:
-    'Hawk id="dh37fgj492je", ts="1367076201", nonce="NPHgnG", ext="and welcome!", mac="CeWHy4d9kbLGhDlkyw2Nh3PJ7SDOdZDa267KH4ZaNMY="'
+
+        'Hawk id="dh37fgj492je", ts="1367076201", nonce="NPHgnG", ext="and
+        welcome!", mac="CeWHy4d9kbLGhDlkyw2Nh3PJ7SDOdZDa267KH4ZaNMY="'
     """
 
     if auth_header is None:
@@ -53,7 +58,7 @@ def parse_authorization_header(auth_header, allowable_keys=None):
     # Replace 'Hawk key: value' with 'key: value'
     # which matches the rest of parts
     parts[0] = auth_scheme_parts[1]
-        
+
     for part in parts:
         attr_parts = part.split('=')
         key = attr_parts[0].strip()
@@ -74,7 +79,7 @@ def parse_authorization_header(auth_header, allowable_keys=None):
 
         if value.find('"') > 0:
             value = value[0:-1]
-            
+
         check_header_attribute(value)
 
         if key in attributes:

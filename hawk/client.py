@@ -20,24 +20,38 @@ class Client(object):
 
     def header(self, url, method, options=None):
         """
-        uri: 'http://example.com/resource?a=b'
-        method: HTTP verb ('GET', 'POST', etc)
-        options:
+        :param uri: 'http://example.com/resource?a=b'
+        :param method: HTTP verb ('GET', 'POST', etc)
+        :param options:
+
         Required Options:
             credentials (id, key, algorithm)
 
         Optional:
-            ext: Application specific data (string)
-            timestamp: A pre-calculated timestamp
-            nonce: '2334f34f':  A pre-generated nonce
-            localtimeOffsetMsec: Time offset to sync with server time (ignored if timestamp provided) (Example 400)
-            payload: UTF-8 encoded string for body hash generation (ignored if hash provided) (Example '{"some":"payload"}')
-            contentType: Payload content-type (ignored if hash provided) (Example 'application/json')
-            hash: Pre-calculated payload hash (Example 'U4MKKSmiVxk37JCCrAVIjV=')
-            app: Oz application id ('24s23423f34dx')
-            dlg: Oz delegated-by application id - '234sz34tww3sd'
+            ext:
+                Application specific data (string)
+            timestamp:
+                A pre-calculated timestamp
+            nonce:
+                '2334f34f':  A pre-generated nonce
+            localtimeOffsetMsec:
+                Time offset to sync with server time (ignored if timestamp
+                provided) (Example 400)
+            payload:
+                UTF-8 encoded string for body hash generation (ignored if hash
+                provided) (Example '{"some":"payload"}')
+            contentType:
+                Payload content-type (ignored if hash provided) (Example
+                'application/json')
+            hash:
+                Pre-calculated payload hash (Example 'U4MKKSmiVxk37JCCrAVIjV=')
+            app:
+                Oz application id ('24s23423f34dx')
+            dlg:
+                Oz delegated-by application id - '234sz34tww3sd'
         """
-        result = { 'field': '', 'artifacts': {} }
+        result = {'field': '', 'artifacts': {}}
+
         if url is None or len(url) == 0:
             print "Bad URL skipping"
             return result
@@ -136,12 +150,13 @@ class Client(object):
     def authenticate(self, response, credentials, artifacts, options=None):
         """Validate server response.
 
-        response: dictionary with server response
-        artifacts:  object recieved from header().artifacts
-        options: {
-        payload:    optional payload received
-        required:   specifies if a Server-Authorization header is required. Defaults to 'false'
-        }
+        :param response: dictionary with server response
+        :param artifacts:  object recieved from header().artifacts
+        :param options: {
+            payload:    optional payload received
+            required:   specifies if a Server-Authorization header is required.
+                        Defaults to 'false'
+            }
         """
         if not isinstance(response, dict) or 'headers' not in response:
             return False
@@ -154,11 +169,12 @@ class Client(object):
             options = {}
 
         if 'required' not in options:
-            options['required'] = False        
+            options['required'] = False
 
         if 'www-authenticate' in response['headers']:
             www_auth_attrs = util.parse_authorization_header(
-                response['headers']['www-authenticate'], ['ts', 'tsm', 'error'])
+                response['headers']['www-authenticate'],
+                ['ts', 'tsm', 'error'])
 
             if 'ts' in www_auth_attrs:
                 ts_mac = hcrypto.calculate_ts_mac(www_auth_attrs['ts'],
@@ -176,7 +192,8 @@ class Client(object):
             return False
 
         s_auth_attrs = util.parse_authorization_header(
-            response['headers']['server-authorization'], ['mac', 'ext', 'hash'])
+            response['headers']['server-authorization'],
+            ['mac', 'ext', 'hash'])
         if 'ext' in s_auth_attrs:
             artifacts['ext'] = s_auth_attrs['ext']
         else:
@@ -204,13 +221,17 @@ class Client(object):
         return p_mac == s_auth_attrs['hash']
 
     def get_bewit(self, uri, options=None):
+        # XXX Where is credentials here?
         """
         Generate a bewit value for a given URI
 
         Compatibility Note: HAWK exposes this as hawk.uri.getBewit
 
-        credentials is an object with the following keys: 'id, 'key', 'algorithm'.
-        options is an object with the following optional keys: 'ext', 'localtime_offset_msec'
+        credentials is an object with the following keys: 'id, 'key',
+        'algorithm'.
+
+        options is an object with the following optional keys: 'ext',
+        'localtime_offset_msec'
 
         uri: 'http://example.com/resource?a=b' or object from Url.parse()
         options: {
@@ -220,14 +241,16 @@ class Client(object):
             credentials: {
                 id: 'dh37fgj492je',
                 key: 'aoijedoaijsdlaksjdl',
-                algorithm: 'sha256'                             // 'sha1', 'sha256'
+                algorithm: 'sha256'              // 'sha1', 'sha256'
             },
-            ttl_sec: 60 * 60,                                    // TTL in seconds
+            ttl_sec: 60 * 60,                    // TTL in seconds
 
             Optional
 
-            ext: 'application-specific',                        // Application specific data sent via the ext attribute
-            localtime_offset_msec: 400                            // Time offset to sync with server time
+            ext: 'application-specific',         // Application specific data
+                                                 // sent via the ext attribute.
+            localtime_offset_msec: 400           // Time offset to sync with
+                                                 // server time
         }
         """
 
@@ -281,6 +304,7 @@ def valid_bewit_args(uri, options):
 
     return True
 
+
 def parse_normalized_url(url):
     """Parse url and set port."""
     url_parts = urlparse(url)
@@ -290,7 +314,7 @@ def parse_normalized_url(url):
         'port': url_parts.port,
         'path': url_parts.path,
         'query': url_parts.query
-        
+
     }
     if url_parts.port is None:
         if url_parts.scheme == 'http':
