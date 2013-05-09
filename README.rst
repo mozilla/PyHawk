@@ -17,7 +17,7 @@ Let me know if there is already a robust library.
 Development
 -----------
 
-Unit tests are in `test_pyhawk.py`. Additionally, one can test compatibility:
+Unit tests are in `hawk/tests`. Additionally, one can test compatibility:
 
 The `tests/server` directory has a server.js and a client.js (Node code) which are from HAWK's usage.js.
 
