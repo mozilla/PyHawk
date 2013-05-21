@@ -10,7 +10,7 @@ Python library for HAWK
 """
 
 __title__ = 'pyhawk'
-__version__ = '0.0.0'
+__version__ = '0.1.0'
 __build__ = 0x010200
 __copyright__ = 'Copyright 2013 Mozilla'
 
