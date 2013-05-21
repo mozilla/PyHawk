@@ -17,6 +17,18 @@ Let me know if there is already a robust library.
 Development
 -----------
 
+Optionally use `env` as a virtualenv
+
+```
+virtualenv env
+source env/bin/activate
+```
+
+Locally install source:
+```
+python setup.py develop
+```
+
 Unit tests are in `hawk/tests`. Additionally, one can test compatibility:
 
 The `tests/server` directory has a server.js and a client.js (Node code) which are from HAWK's usage.js.
