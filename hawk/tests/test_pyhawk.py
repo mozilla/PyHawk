@@ -31,16 +31,15 @@ class HawkTestCase(unittest.TestCase):
 
     def test_entry_points(self):
 
-        hawk.Client
+        hawk.client.header
+        hawk.client.authenticate
         hawk.Server
 
     def test_client_api(self):
-        client = hawk.Client()
-
-        header = client.header(url, 'GET', { 'credentials': CREDS['foobar-1234'],
-                                             'ext': 'and welcome!',
-                                             'nonce': 'lwfuar',
-                                             'timestamp': 1367927332})
+        header = hawk.client.header(url, 'GET', { 'credentials': CREDS['foobar-1234'],
+                                                  'ext': 'and welcome!',
+                                                  'nonce': 'lwfuar',
+                                                  'timestamp': 1367927332})
 
         assert header['field'] == 'Hawk id="foobar-1234", ts="1367927332", nonce="lwfuar", ext="and welcome!", mac="ZZI/y3M0gV7PWCRX1VddptkWhunWxrpQikXAsLYzblU="'
         assert header['artifacts'] == {
@@ -59,14 +58,13 @@ class HawkTestCase(unittest.TestCase):
            }
         }
 
-        assert client.authenticate(resp, CREDS['foobar-1234'], header['artifacts'], {
+        assert hawk.client.authenticate(resp, CREDS['foobar-1234'], header['artifacts'], {
                 'payload': 'Hello and welcome!'
                 })
 
     def test_bewit(self):
-        client = hawk.Client()
-        bewit = client.get_bewit(url, {'credentials': CREDS['foobar-1234'],
-                                       'ttl_sec': 60 * 1000})
+        bewit = hawk.client.get_bewit(url, {'credentials': CREDS['foobar-1234'],
+                                            'ttl_sec': 60 * 1000})
         req = {
             'method': 'GET',
             'url': '/bazz?buzz=fizz&mode=ala&bewit=' + bewit,

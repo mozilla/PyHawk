@@ -8,7 +8,9 @@ Or you can point it at sample_server.py
 """
 import requests
 
-import hawk
+from hawk.client import header as hawk_header
+from hawk.client import authenticate as hawk_authenticate
+#import hawk.client.authenticate as authenticate
 
 def main():
     """
@@ -23,9 +25,7 @@ def main():
     url = 'http://127.0.0.1:8002/resource/1?b=1&a=2'
     params = {'b': 1, 'a': 2}
 
-    client = hawk.Client()
-
-    header = client.header(url, 'GET', { 'credentials': credentials,
+    header = hawk_header(url, 'GET', { 'credentials': credentials,
                                          'ext': 'and welcome!' })
 
     headers = [('Authorization', header['field'])]
@@ -38,7 +38,7 @@ def main():
         'headers': res.headers
     }
 
-    if client.authenticate(response, credentials, header['artifacts'],
+    if hawk_authenticate(response, credentials, header['artifacts'],
                            { 'payload': res.text }):
         print "Response validates (OK)"
     else:

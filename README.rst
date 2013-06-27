@@ -7,6 +7,86 @@ Hawk_ is an HTTP authentication scheme using a message authentication code (MAC)
 
 PyHawk is great for consuming or providing webservices from Python.
 
+Usage (Client Side)
+-------------------
+If you had code that consumed a HAWK authenticated webservice,
+you could do something like the following:
+```
+import hawk
+import requests
+
+# Hawk is secured with a shared secret
+credentials = db.lookup_secrets(some_id)
+
+# Prepare your request headers
+header = hawk.client.header(url, 'GET', {
+    'credentials': credentials,
+    'ext': 'Yo Yo'})
+
+# Which goes into Authorization field of HTTP headers
+headers = [('Authorization', header['field'])]
+res = requests.get(url, data=params, headers=headers)
+
+response = { 'headers': res.headers }
+
+# We can verify we're talking to our trusted server
+verified = hawk.client.authenticate(response, credentials,
+                                    header['artifacts'],
+                                    {'payload': res.text})
+if verified:
+    print res.text
+else:
+    print "Something fishy going on."
+```
+
+See `sample_client.py`_ for details.
+
+.. _`sample_client.py`: https://github.com/mozilla/PyHawk/blob/master/sample_client.py
+
+Usage (Server side)
+-------------------
+If you provide a webservice and want to do authentication via HAWK,
+do something like the following:
+```
+import hawk
+
+# req is a Request object from your webserver framework
+
+
+# A callback function for looking up credentials
+def lookup_hawk_credentials(id):
+    # Some collection of secrets
+    return db.lookup(id)
+
+if 'Hawk ' in req.headers['Authorization']:
+    return check_auth_via_hawk(req)
+else:
+    return failure(req, res)
+
+def check_auth_via_hawk(req):
+    server = hawk.Server(req, lookup_hawk_credentials)
+
+    # This will raise a hawk.util.HawkException if it fails
+    artifacts = server.authenticate()
+
+    # Sign our response, so clients can trust us
+    auth = server.header(artifacts,
+                             { 'payload': payload,
+                               'contentType': 'text/plain' })
+
+    headers = [('Content-Type', 'text/plain'),
+                   ('Server-Authorization', auth)]
+
+    start_response(status, headers)
+
+    return payload
+```
+
+See `sample_server.py`_ for details.
+
+.. _`sample_server.py`: https://github.com/mozilla/PyHawk/blob/master/sample_client.py
+
+
 Status
 ------
 
