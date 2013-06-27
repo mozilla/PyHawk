@@ -31,7 +31,8 @@ def main():
     headers = [('Authorization', header['field'])]
     res = requests.get(url, data=params, headers=headers)
 
-    print str(res.status_code) + ' ' + res.text
+    if (200 != res.status_code):
+        print 'Authorized request (FAILED) status=' + str(res.status_code) + ' body=' + res.text
 
     response = {
         'headers': res.headers
@@ -39,13 +40,13 @@ def main():
 
     if client.authenticate(response, credentials, header['artifacts'],
                            { 'payload': res.text }):
-        print "(valid)"
+        print "Response validates (OK)"
     else:
-        print "(invalid)"
+        print "Response validates (FAIL) " + res.text
 
-    print "Generating bewit url"
-    print url + '&bewit=' + client.get_bewit(url, {'credentials': credentials,
-                                                   'ttl_sec': 60 * 1000})
+    # print "Generating bewit url"
+    # print url + '&bewit=' + client.get_bewit(url, {'credentials': credentials,
+    #                                               'ttl_sec': 60 * 1000})
 
 if __name__ == '__main__':
     main()

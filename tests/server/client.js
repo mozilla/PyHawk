@@ -28,10 +28,18 @@ var credentialsFunc = function (id, callback) {
 unAuthDone = false;
 Request('http://127.0.0.1:8002/resource/1?b=1&a=2', function (error, response, body) {
     unAuthDone = true;
-    if (error) console.error(error);
+    if (error) {
+        console.error(error);
+        process.exit(2);
+    }
     if (response && response.statusCode) {
-        console.log('Unauthenticated request was');
-        console.log(response.statusCode + ': ' + body);
+        if (401 === response.statusCode) {
+            console.log('Unauthenticated request should 401 - (OK)');
+        } else {
+            console.error('Unauthenticated request (FAILED) should have been 401, but was ' + response.statusCode);
+            console.error(body);
+            process.exit(1);
+        }
     }
     if (authDone && unAuthDone) process.exit(0);
 });
@@ -51,14 +59,28 @@ credentialsFunc('dh37fgj492je', function (err, credentials) {
     };
 
     Request(options, function (error, response, body) {
-	authDone = true;
+        authDone = true;
         var isValid = Hawk.client.authenticate(response, credentials, header.artifacts, { payload: body });
-	console.log('authenticated request was:');
-	if (error) console.error(error);
+        if (error) {
+            console.error(error);
+            process.exit(3);
+        }
         if (response && response.statusCode) {
-            console.log(response.statusCode + ': ' + body + (isValid ? ' (valid)' : ' (invalid)'));
-	}
+            if (200 === response.statusCode) {
+                console.log('Authenticated Request is 200 (OK)');
+                if (isValid) {
+                    console.log('Response validates (OK)');
+                } else {
+                    console.error('Response validates (FAILED)');
+                    console.error(body);
+                    process.exit(5);
+                }
+            } else {
+                console.error('Authenticated Request (FAILED) should be 200, but was ' + response.statusCode);
+                console.error(body);
+                process.exit(4);
+            }
+        }
         if (authDone && unAuthDone) process.exit(0);
     });
 });
-
