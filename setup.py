@@ -2,28 +2,18 @@
 
 import codecs
 import os
-import re
 from setuptools import setup
 
 
 def read(*parts):
     return codecs.open(os.path.join(os.path.dirname(__file__), *parts)).read()
 
-def find_version(*file_paths):
-    version_file = read(*file_paths)
-    version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]",
-                              version_file, re.M)
-    if version_match:
-        return version_match.group(1)
-    raise RuntimeError("Unable to find version string.")
-
-
 README = read('README.rst')
 CHANGELOG = read('CHANGES.txt')
 
 setup(
     name="PyHawk",
-    version=find_version('hawk/__init__.py'),
+    version="0.1.0",
     url='https://github.com/mozilla/PyHawk',
     author='Austin King',
     author_email='ozten@mozilla.com',

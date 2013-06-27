@@ -9,8 +9,10 @@ Python library for HAWK
 
 """
 
+import pkg_resources
+
 __title__ = 'pyhawk'
-__version__ = '0.1.0'
+__version__ = pkg_resources.get_distribution(__title__).version
 __build__ = 0x010200
 __copyright__ = 'Copyright 2013 Mozilla'
 
