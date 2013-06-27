@@ -9,36 +9,38 @@ PyHawk is great for consuming or providing webservices from Python.
 
 Usage (Client Side)
 -------------------
+
 If you had code that consumed a HAWK authenticated webservice,
-you could do something like the following:
-```
-import hawk
-import requests
+you could do something like the following
 
-# Hawk is secured with a shared secret
-credentials = db.lookup_secrets(some_id)
+::
 
-# Prepare your request headers
-header = hawk.client.header(url, 'GET', {
-    'credentials': credentials,
-    'ext': 'Yo Yo'})
+    import hawk
+    import requests
 
-# Which goes into Authorization field of HTTP headers
-headers = [('Authorization', header['field'])]
-res = requests.get(url, data=params, headers=headers)
+    # Hawk is secured with a shared secret
+    credentials = db.lookup_secrets(some_id)
 
-response = { 'headers': res.headers }
+    # Prepare your request headers
+    header = hawk.client.header(url, 'GET', {
+        'credentials': credentials,
+        'ext': 'Yo Yo'})
 
-# We can verify we're talking to our trusted server
-verified = hawk.client.authenticate(response, credentials,
-                                    header['artifacts'],
-                                    {'payload': res.text})
-if verified:
-    print res.text
-else:
-    print "Something fishy going on."
-```
+    # Which goes into Authorization field of HTTP headers
+    headers = [('Authorization', header['field'])]
+    res = requests.get(url, data=params, headers=headers)
 
+    response = { 'headers': res.headers }
+
+    # We can verify we're talking to our trusted server
+    verified = hawk.client.authenticate(response, credentials,
+                                        header['artifacts'],
+                                        {'payload': res.text})
+    if verified:
+        print res.text
+    else:
+        print "Something fishy going on."
+        
 See `sample_client.py`_ for details.
 
 .. _`sample_client.py`: https://github.com/mozilla/PyHawk/blob/master/sample_client.py
@@ -47,41 +49,43 @@ Usage (Server side)
 -------------------
 If you provide a webservice and want to do authentication via HAWK,
 do something like the following:
-```
-import hawk
 
-# req is a Request object from your webserver framework
+::
 
 
-# A callback function for looking up credentials
-def lookup_hawk_credentials(id):
-    # Some collection of secrets
-    return db.lookup(id)
+    import hawk
 
-if 'Hawk ' in req.headers['Authorization']:
-    return check_auth_via_hawk(req)
-else:
-    return failure(req, res)
+    # req is a Request object from your webserver framework
 
-def check_auth_via_hawk(req):
-    server = hawk.Server(req, lookup_hawk_credentials)
 
-    # This will raise a hawk.util.HawkException if it fails
-    artifacts = server.authenticate()
+    # A callback function for looking up credentials
+    def lookup_hawk_credentials(id):
+        # Some collection of secrets
+        return db.lookup(id)
 
-    # Sign our response, so clients can trust us
-    auth = server.header(artifacts,
-                             { 'payload': payload,
-                               'contentType': 'text/plain' })
+    if 'Hawk ' in req.headers['Authorization']:
+        return check_auth_via_hawk(req)
+    else:
+        return failure(req, res)
 
-    headers = [('Content-Type', 'text/plain'),
-                   ('Server-Authorization', auth)]
+    def check_auth_via_hawk(req):
+        server = hawk.Server(req, lookup_hawk_credentials)
 
-    start_response(status, headers)
+        # This will raise a hawk.util.HawkException if it fails
+        artifacts = server.authenticate()
 
-    return payload
-```
+        # Sign our response, so clients can trust us
+        auth = server.header(artifacts,
+                                 { 'payload': payload,
+                                   'contentType': 'text/plain' })
 
+        headers = [('Content-Type', 'text/plain'),
+                       ('Server-Authorization', auth)]
+
+        start_response(status, headers)
+
+        return payload
+        
 See `sample_server.py`_ for details.
 
 .. _`sample_server.py`: https://github.com/mozilla/PyHawk/blob/master/sample_client.py
@@ -99,15 +103,17 @@ Development
 
 Optionally use `env` as a virtualenv
 
-```
-virtualenv env
-source env/bin/activate
-```
+::
+
+    virtualenv env
+    source env/bin/activate
+
 
 Locally install source:
-```
-python setup.py develop
-```
+
+::
+
+    python setup.py develop
 
 Unit tests are in `hawk/tests`. Additionally, one can test compatibility:
 
@@ -120,6 +126,8 @@ To test the server, do the following:
 3) node client.js
 
 Output should be 
+
+::
 
     Authenticated Request is 200 (OK)
     Response validates (OK)
@@ -135,6 +143,8 @@ To test the client, do the following:
 4) python sample_client.py
 
 Output should be
+
+::
 
     Response validates (OK)
 
