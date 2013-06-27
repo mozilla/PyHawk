@@ -22,7 +22,7 @@ def main():
         """
         Usage: python test_server.py
 
-        Then in tests/server/ run
+        Then in compatibility/nodejs/ run
         node client.js
 
         This will make an unauthorized and then a HAWK authorized

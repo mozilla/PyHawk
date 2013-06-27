@@ -31,33 +31,32 @@ python setup.py develop
 
 Unit tests are in `hawk/tests`. Additionally, one can test compatibility:
 
-The `tests/server` directory has a server.js and a client.js (Node code) which are from HAWK's usage.js.
+The `compatibility/nodejs` directory has a server.js and a client.js (Node code) which are from HAWK's usage.js.
 
 To test the server, do the following:
 
 1) python sample_server.py
-2) cd tests/server
+2) cd compatibility/nodejs/
 3) node client.js
 
 Output should be 
 
-    authenticated request was:
-    200: Hello dh37fgj492je and welcome! (valid)
-    Unauthenticated request was
-    401: Please authenticate
+    Authenticated Request is 200 (OK)
+    Response validates (OK)
+    Unauthenticated request should 401 - (OK)
 
 Note: the port numbers in test_pyhawk.py and client.js must match.
 
 To test the client, do the following:
 
-1) cd tests/server
+1) cd compatibility/nodejs/
 2) node server.js
 3) cd ../..
 4) python sample_client.py
 
 Output should be
 
-    200 Hello Steve and welcome!
+    Response validates (OK)
 
 Plan
 ----
