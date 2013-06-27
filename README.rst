@@ -55,14 +55,12 @@ do something like the following:
 
     import hawk
 
-    # req is a Request object from your webserver framework
-
-
     # A callback function for looking up credentials
     def lookup_hawk_credentials(id):
         # Some collection of secrets
         return db.lookup(id)
 
+    # req is a Request object from your webserver framework
     if 'Hawk ' in req.headers['Authorization']:
         return check_auth_via_hawk(req)
     else:
