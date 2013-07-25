@@ -88,3 +88,12 @@ def parse_authorization_header(auth_header, allowable_keys=None):
         attributes[key] = value
 
     return attributes
+
+def compare(a, b):
+    """ Constant time string comparision, mitigates side channel attacks. """
+    if len(a) != len(b):
+      return False
+    result = 0
+    for x, y in zip(a, b):
+      result |= ord(x) ^ ord(y)
+    return result == 0
