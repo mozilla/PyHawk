@@ -7,14 +7,16 @@ Crypto functions for HAWK authentication
 from base64 import b64encode, urlsafe_b64encode, urlsafe_b64decode
 import hashlib
 import hmac
-import random
 import string
+
+from Crypto import Random
 
 from hawk.util import HawkException
 
 
 HAWK_VER = 1
 
+rng = Random.new()
 
 class UnknownAlgorithm(HawkException):
     """Exception raised for bad configuration of algorithm."""
@@ -110,7 +112,7 @@ def calculate_ts_mac(ts, credentials):
 
 def random_string(length):
     """Generates a random string for a given length."""
-    return ''.join(random.choice(string.lowercase) for i in range(length))
+    return urlsafe_b64encode(rng.read(length*6))[0:length]
 
 
 def calculate_bewit(credentials, artifacts, exp):
