@@ -113,7 +113,14 @@ Locally install source:
 
     python setup.py develop
 
-Unit tests are in `hawk/tests`. Additionally, one can test compatibility:
+Unit tests are in `hawk/tests`.
+
+::
+
+    python hawk/tests/test_*.py
+
+
+Additionally, one can test compatibility:
 
 The `compatibility/nodejs` directory has a server.js and a client.js (Node code) which are from HAWK's usage.js.
 
