@@ -174,7 +174,7 @@ def authenticate(response, credentials, artifacts, options=None):
         if 'ts' in www_auth_attrs:
             ts_mac = hcrypto.calculate_ts_mac(www_auth_attrs['ts'],
                                                   credentials)
-            if not ts_mac == www_auth_attrs['ts']:
+            if not util.compare(ts_mac, www_auth_attrs['ts']):
                 print ts_mac + " didn't match " + www_auth_attrs['ts']
                 return False
 
@@ -197,7 +197,7 @@ def authenticate(response, credentials, artifacts, options=None):
     artifacts['hash'] = s_auth_attrs['hash']
 
     mac = hcrypto.calculate_mac('response', credentials, artifacts)
-    if not mac == s_auth_attrs['mac']:
+    if not util.compare(mac, s_auth_attrs['mac']):
         print "server mac mismatch " + mac + " != " + s_auth_attrs['mac']
         return False
 
@@ -211,10 +211,10 @@ def authenticate(response, credentials, artifacts, options=None):
     p_mac = hcrypto.calculate_payload_hash(options['payload'],
                                            credentials['algorithm'],
                                            content_type)
-    if not p_mac == s_auth_attrs['hash']:
+    if not util.compare(p_mac, s_auth_attrs['hash']):
         print "p_mac " + p_mac + " != " + s_auth_attrs['hash']
 
-    return p_mac == s_auth_attrs['hash']
+    return util.compare(p_mac, s_auth_attrs['hash'])
 
 def get_bewit(uri, options=None):
     # XXX Where is credentials here?

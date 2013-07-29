@@ -70,8 +70,7 @@ class Server(object):
         credentials = self.credentials_fn(attributes['id'])
         mac = self._calculate_mac(credentials, artifacts)
 
-        # TODO prevent timing attach
-        if not mac == attributes['mac']:
+        if not util.compare(mac, attributes['mac']):
             print "Ours [" + mac + "] Theirs [" + attributes['mac'] + "]"
             raise BadMac
 
@@ -82,7 +81,7 @@ class Server(object):
             p_hash = hcrypto.calculate_payload_hash(options['payload'],
                                                     credentials['algorithm'],
                                                     self.req['contentType'])
-            if not p_hash == attributes['hash']:
+            if not util.compare(p_hash, attributes['hash']):
                 print "Bad payload hash"
                 raise BadRequest
 
@@ -246,8 +245,7 @@ class Server(object):
         credentials = self.credentials_fn(bewit['id'])
         mac = hcrypto.calculate_mac('bewit', credentials, artifacts, True)
 
-        # TODO mitigate timing attack
-        if mac != bewit['mac']:
+        if not util.compare(mac, bewit['mac']):
             print "bewit " + mac + " didn't match " + bewit['mac']
             raise BadRequest
 
