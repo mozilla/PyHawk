@@ -13,7 +13,7 @@ CHANGELOG = read('CHANGES.txt')
 
 setup(
     name="PyHawk",
-    version="0.1.0",
+    version="0.1.1",
     url='https://github.com/mozilla/PyHawk',
     author='Austin King',
     author_email='ozten@mozilla.com',
