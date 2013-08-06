@@ -21,7 +21,7 @@ setup(
     long_description=README + '\n' + CHANGELOG,
     packages=['hawk', ],
     include_package_data=True,
-    install_requires=['requests>=1.2.0', 'pycrypto==2.6'],
+    install_requires=['requests>=1.2.0'],
     zip_safe=False,
     classifiers=[
         'Development Status :: 4 - Beta',
