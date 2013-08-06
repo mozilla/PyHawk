@@ -4,6 +4,7 @@
 Crypto functions for HAWK authentication
 """
 
+import os
 from base64 import b64encode, urlsafe_b64encode, urlsafe_b64decode
 import hashlib
 import hmac
