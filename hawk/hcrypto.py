@@ -72,7 +72,7 @@ def normalize_string(mac_type, options):
     if 'app' in options and options['app'] is not None and \
        len(options['app']) > 0:
         normalized += options['app'] + '\n'
-        if 'dlg' in options and len(options['dlg']) > 0:
+        if 'dlg' in options and options['dlg'] is not None:
             normalized += options['dlg'] + '\n'
 
     return normalized
