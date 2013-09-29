@@ -169,8 +169,7 @@ class Server(object):
                 'algorithm' not in credentials:
             return ''
 
-        if 'hash' not in h_artifacts or h_artifacts['hash'] is None or \
-                len(h_artifacts['hash']) == 0:
+        if h_artifacts.get('hash') is None or len(h_artifacts['hash']) == 0:
             if 'payload' in options:
                 h_artifacts['hash'] = hcrypto.calculate_payload_hash(
                     options['payload'], credentials['algorithm'],
@@ -182,8 +181,7 @@ class Server(object):
         if 'hash' in h_artifacts:
             header += ', hash="' + h_artifacts['hash'] + '"'
 
-        if 'ext' in h_artifacts and h_artifacts['ext'] is not None and \
-                len(h_artifacts['ext']) > 0:
+        if h_artifacts.get('ext') is not None and len(h_artifacts['ext']) > 0:
 
             h_ext = util.check_header_attribute(
                 h_artifacts['ext']).replace('\\', '\\\\').replace('\n', '\\n')
