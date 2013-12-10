@@ -153,6 +153,17 @@ Output should be
 
     Response validates (OK)
 
+Publishing Versions
+-------------------
+
+Edit setup.py and bump the version number.
+
+::
+
+    python setup.py sdist upload
+
+You should see your updates at https://pypi.python.org/pypi?%3Aaction=pkg_edit&name=PyHawk
+
 Plan
 ----
 
