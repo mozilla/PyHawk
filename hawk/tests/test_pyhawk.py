@@ -108,5 +108,20 @@ class HawkTestCase(unittest.TestCase):
 
         assert header == 'Hawk mac="okjCR+o26FMhInYoJ1QO30Fu9cl3wGIWmwqydQXND+w=", hash="y+iZjG+hr2is3SmZLFOe551/LGS3PQPMY9ZWjToaNjg=", ext="and welcome!"'
 
+    def test_parsing_empty_attrs(self):
+        url = '/bazz?buzz=fizz&mode=ala'
+
+        req = {
+            'method': 'GET',
+            'url': url,
+            'host': 'example.com',
+            'port': 80,
+            'headers': {
+                'authorization': 'Hawk id="foobar-1234", app="", ts="1367927332", nonce="lwfuar", ext="and welcome!", mac="ZZI/y3M0gV7PWCRX1VddptkWhunWxrpQikXAsLYzblU="'
+                }
+            }
+        server = hawk.Server(req, lambda cid: CREDS[cid])
+        artifacts = server.authenticate({'timestampSkewSec': time.time() - 1367927332 + 100})
+
 if __name__ == '__main__':
     unittest.main()

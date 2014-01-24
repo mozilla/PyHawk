@@ -77,7 +77,7 @@ def parse_authorization_header(auth_header, allowable_keys=None):
         if attr_parts[1].find('"') == 0:
             value = attr_parts[1][1:]
 
-        if value.find('"') > 0:
+        if value.find('"') > -1:
             value = value[0:-1]
 
         check_header_attribute(value)
