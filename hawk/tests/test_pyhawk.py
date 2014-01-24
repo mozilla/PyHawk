@@ -89,8 +89,7 @@ class HawkTestCase(unittest.TestCase):
                 }
             }
         server = hawk.Server(req, lambda cid: CREDS[cid])
-        # Add 100 plus the difference between now and our hardcoded timestamp
-        artifacts = server.authenticate({'timestampSkewSec': time.time() - 1367927332 + 100})
+        artifacts = server.authenticate({'timestampSkewSec': self._skewed_now()})
 
         assert artifacts == {
             'nonce': 'lwfuar', 'ext': 'and welcome!', 'dlg': '',
@@ -100,6 +99,31 @@ class HawkTestCase(unittest.TestCase):
             'host': 'example.com', 'id': 'foobar-1234', 'hash': '',
             'method': 'GET'
         }
+
+        payload = 'Hello and welcome!'
+        header = server.header(artifacts,
+                               { 'payload': payload,
+                                 'contentType': 'text/plain' })
+
+        assert header == 'Hawk mac="okjCR+o26FMhInYoJ1QO30Fu9cl3wGIWmwqydQXND+w=", hash="y+iZjG+hr2is3SmZLFOe551/LGS3PQPMY9ZWjToaNjg=", ext="and welcome!"'
+
+    def test_server_api_with_abs_url(self):
+        url = 'http://someserver/bazz?buzz=fizz&mode=ala'
+
+        req = {
+            'method': 'GET',
+            'url': url,
+            'host': 'example.com',
+            'port': 80,
+            'headers': {
+                'authorization': 'Hawk id="foobar-1234", ts="1367927332", nonce="lwfuar", ext="and welcome!", mac="ZZI/y3M0gV7PWCRX1VddptkWhunWxrpQikXAsLYzblU="'
+                }
+            }
+        server = hawk.Server(req, lambda cid: CREDS[cid])
+        artifacts = server.authenticate({'timestampSkewSec': self._skewed_now()})
+
+        self.assertEqual(artifacts['resource'],
+                         '/bazz?buzz=fizz&mode=ala')
 
         payload = 'Hello and welcome!'
         header = server.header(artifacts,
@@ -121,7 +145,11 @@ class HawkTestCase(unittest.TestCase):
                 }
             }
         server = hawk.Server(req, lambda cid: CREDS[cid])
-        artifacts = server.authenticate({'timestampSkewSec': time.time() - 1367927332 + 100})
+        artifacts = server.authenticate({'timestampSkewSec': self._skewed_now()})
+
+    def _skewed_now(self):
+        # Add 100 plus the difference between now and our hardcoded timestamp
+        return time.time() - 1367927332 + 100
 
 if __name__ == '__main__':
     unittest.main()

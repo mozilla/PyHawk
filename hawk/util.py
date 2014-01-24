@@ -3,6 +3,10 @@
 """
 Various low level helper functions for HAWK authentication.
 """
+import logging
+from urlparse import urlparse
+
+log = logging.getLogger(__name__)
 
 
 class HawkException(Exception):
@@ -52,7 +56,7 @@ def parse_authorization_header(auth_header, allowable_keys=None):
     parts = auth_header.split(',')
     auth_scheme_parts = parts[0].split(' ')
     if not 'hawk' == auth_scheme_parts[0].lower():
-        print "Unknown scheme: " + auth_scheme_parts[0].lower()
+        log.info("Unknown scheme: " + auth_scheme_parts[0].lower())
         raise BadRequest
 
     # Replace 'Hawk key: value' with 'key: value'
@@ -63,7 +67,7 @@ def parse_authorization_header(auth_header, allowable_keys=None):
         attr_parts = part.split('=')
         key = attr_parts[0].strip()
         if key not in allowable_keys:
-            print "Unknown Hawk key_" + attr_parts[0] + "_"
+            log.info("Unknown Hawk key_" + attr_parts[0] + "_")
             raise BadRequest
 
         # TODO we don't do a good job of parsing, '=' should work for more =.
@@ -97,3 +101,26 @@ def compare(a, b):
     for x, y in zip(a, b):
       result |= ord(x) ^ ord(y)
     return result == 0
+
+
+def parse_normalized_url(url):
+    """Parse url and set port."""
+    url_parts = urlparse(url)
+    url_dict = {
+        'scheme': url_parts.scheme,
+        'hostname': url_parts.hostname,
+        'port': url_parts.port,
+        'path': url_parts.path,
+        'resource': url_parts.path,
+        'query': url_parts.query,
+    }
+    if len(url_dict['query']) > 0:
+        url_dict['resource'] = '%s?%s' % (url_dict['resource'],
+                                          url_dict['query'])
+
+    if url_parts.port is None:
+        if url_parts.scheme == 'http':
+            url_dict['port'] = 80
+        elif url_parts.scheme == 'https':
+            url_dict['port'] = 443
+    return url_dict

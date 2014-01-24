@@ -4,13 +4,16 @@
 Server APIs for HAWK Authentication.
 """
 
+import logging
 import math
+import pprint
 import time
-from urlparse import urlparse
 
 import hawk.hcrypto as hcrypto
 import hawk.util as util
 from hawk.server import BadRequest
+
+log = logging.getLogger(__name__)
 
 
 def header(url, method, options=None):
@@ -48,24 +51,24 @@ def header(url, method, options=None):
     result = {'field': '', 'artifacts': {}}
 
     if url is None or len(url) == 0:
-        print "Bad URL skipping"
+        log.info("Bad URL skipping")
         return result
 
     if method is None or len(method) == 0:
-        print "Bad method skipping"
+        log.info("Bad method skipping")
         return result
 
     if not isinstance(options, dict):
-        print "Bad options skipping"
+        log.info("Bad options skipping")
         return result
 
     if 'credentials' not in options:
-        print "Bad credentials skipping"
+        log.info("Bad credentials skipping")
         return result
 
     cred = options['credentials']
     if 'id' not in cred or 'key' not in cred or 'algorithm' not in cred:
-        print "Bad credentail elements skipping"
+        log.info("Bad credentail elements skipping")
         return result
 
     timestamp = math.floor(time.time())
@@ -78,7 +81,7 @@ def header(url, method, options=None):
     if 'nonce' not in options:
         options['nonce'] = hcrypto.random_string(6)
 
-    url_parts = parse_normalized_url(url)
+    url_parts = util.parse_normalized_url(url)
 
     # TODO use None or '' for these optional artifacts?
     if 'hash' not in options:
@@ -90,9 +93,9 @@ def header(url, method, options=None):
     if 'dlg' not in options:
         options['dlg'] = None
 
-    resource = url_parts['path']
-    if len(url_parts['query']) > 0:
-        resource += '?' + url_parts['query']
+    resource = url_parts['resource']
+
+    log.debug('parsed URL parts: %s' % pprint.pformat(url_parts))
 
     artifacts = {
         'ts': int(timestamp),
@@ -112,8 +115,13 @@ def header(url, method, options=None):
     if artifacts['hash'] is None and 'payload' in options:
         if 'contentType' not in options:
             options['contentType'] = 'text/plain'
+        log.debug('about to hash payload: %s' % options['payload'])
+        log.debug('algorithm=%s, contentType=%s'
+                  % (cred['algorithm'], options['contentType']))
         artifacts['hash'] = hcrypto.calculate_payload_hash(
                options['payload'], cred['algorithm'], options['contentType'])
+
+    log.debug('artifacts=%s' % pprint.pformat(artifacts))
 
     mac = hcrypto.calculate_mac('header', cred, artifacts)
 
@@ -157,7 +165,7 @@ def authenticate(response, credentials, artifacts, options=None):
         return False
 
     if 'content-type' not in response['headers']:
-        print "WARNING response lacked content-type"
+        log.warn("response lacked content-type")
         response['headers']['content-type'] = 'text/plain'
 
     if options is None:
@@ -175,7 +183,7 @@ def authenticate(response, credentials, artifacts, options=None):
             ts_mac = hcrypto.calculate_ts_mac(www_auth_attrs['ts'],
                                                   credentials)
             if not util.compare(ts_mac, www_auth_attrs['ts']):
-                print ts_mac + " didn't match " + www_auth_attrs['ts']
+                log.info(ts_mac + " didn't match " + www_auth_attrs['ts'])
                 return False
 
     if 'server-authorization' not in response['headers'] and \
@@ -183,7 +191,7 @@ def authenticate(response, credentials, artifacts, options=None):
         return True
 
     if 'server-authorization' not in response['headers']:
-        print "Unable to verify, no server-authorization header"
+        log.info("Unable to verify, no server-authorization header")
         return False
 
     s_auth_attrs = util.parse_authorization_header(
@@ -198,7 +206,7 @@ def authenticate(response, credentials, artifacts, options=None):
 
     mac = hcrypto.calculate_mac('response', credentials, artifacts)
     if not util.compare(mac, s_auth_attrs['mac']):
-        print "server mac mismatch " + mac + " != " + s_auth_attrs['mac']
+        log.info("server mac mismatch " + mac + " != " + s_auth_attrs['mac'])
         return False
 
     if 'payload' in options:
@@ -212,7 +220,7 @@ def authenticate(response, credentials, artifacts, options=None):
                                            credentials['algorithm'],
                                            content_type)
     if not util.compare(p_mac, s_auth_attrs['hash']):
-        print "p_mac " + p_mac + " != " + s_auth_attrs['hash']
+        log.info("p_mac " + p_mac + " != " + s_auth_attrs['hash'])
 
     return util.compare(p_mac, s_auth_attrs['hash'])
 
@@ -259,7 +267,7 @@ def get_bewit(uri, options=None):
     if 'id' not in creds or 'key' not in creds or 'algorithm' not in creds:
         raise BadRequest
 
-    url_parts = parse_normalized_url(uri)
+    url_parts = util.parse_normalized_url(uri)
 
     exp = now + int(options['ttl_sec'])
 
@@ -299,22 +307,3 @@ def valid_bewit_args(uri, options):
         options['localtime_offset_msec'] = 0
 
     return True
-
-
-def parse_normalized_url(url):
-    """Parse url and set port."""
-    url_parts = urlparse(url)
-    url_dict = {
-        'scheme': url_parts.scheme,
-        'hostname': url_parts.hostname,
-        'port': url_parts.port,
-        'path': url_parts.path,
-        'query': url_parts.query
-
-    }
-    if url_parts.port is None:
-        if url_parts.scheme == 'http':
-            url_dict['port'] = 80
-        elif url_parts.scheme == 'https':
-            url_dict['port'] = 443
-    return url_dict

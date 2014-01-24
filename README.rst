@@ -40,7 +40,7 @@ you could do something like the following
         print res.text
     else:
         print "Something fishy going on."
-        
+
 See `sample_client.py`_ for details.
 
 .. _`sample_client.py`: https://github.com/mozilla/PyHawk/blob/master/sample_client.py
@@ -83,10 +83,35 @@ do something like the following:
         start_response(status, headers)
 
         return payload
-        
+
 See `sample_server.py`_ for details.
 
 .. _`sample_server.py`: https://github.com/mozilla/PyHawk/blob/master/sample_client.py
+
+Logging
+-------
+
+PyHawk uses `python logging`_ to emit information about why authorization is
+failing and so on. You can configure these logger channels with ``INFO``,
+``DEBUG``, etc, to get some helpful output.
+
+**hawk**
+    All hawk logging, including everything below.
+
+**hawk.client**
+    All hawk client related messages, including header construction.
+
+**hawk.server**
+    All hawk server related messages, including authorization.
+
+**hawk.hcrypto**
+    All hawk crypto related messages, including bewit handling.
+
+**hawk.util**
+    All shared hawk code such as header normalization.
+
+
+.. _`python logging`: http://docs.python.org/2/library/logging.html
 
 
 Status
@@ -130,7 +155,7 @@ To test the server, do the following:
 2) cd compatibility/nodejs/
 3) node client.js
 
-Output should be 
+Output should be
 
 ::
 

@@ -10,12 +10,16 @@ Python library for HAWK
 """
 
 import copy
+import logging
 import math
+import pprint
 import time
 from urlparse import urlparse, parse_qs
 
 import hawk.hcrypto as hcrypto
 import hawk.util as util
+
+log = logging.getLogger(__name__)
 
 
 class BadMac(util.HawkException):
@@ -67,22 +71,28 @@ class Server(object):
             self.req['headers']['authorization'])
 
         artifacts = self._prepare_artifacts(attributes)
+
+        log.debug('artifacts=%s' % pprint.pformat(artifacts))
+
         credentials = self.credentials_fn(attributes['id'])
         mac = self._calculate_mac(credentials, artifacts)
 
         if not util.compare(mac, attributes['mac']):
-            print "Ours [" + mac + "] Theirs [" + attributes['mac'] + "]"
+            log.info("Ours [" + mac + "] Theirs [" + attributes['mac'] + "]")
             raise BadMac
 
         if 'payload' in options:
             if 'hash' not in attributes:
-                print "Missing required payload hash"
+                log.info("Missing required payload hash")
                 raise BadRequest
             p_hash = hcrypto.calculate_payload_hash(options['payload'],
                                                     credentials['algorithm'],
                                                     self.req['contentType'])
+            log.debug('payload=%s' % options['payload'])
+            log.debug('algorithm=%s, contentType=%s'
+                      % (credentials['algorithm'], self.req['contentType']))
             if not util.compare(p_hash, attributes['hash']):
-                print "Bad payload hash"
+                log.info("Bad payload hash")
                 raise BadRequest
 
         if 'check_nonce_fn' in options:
@@ -92,7 +102,7 @@ class Server(object):
 
         skew = int(options['timestampSkewSec'])
         if math.fabs(int(attributes['ts']) - now) > skew:
-            print "Expired request"
+            log.inf("Expired request")
             raise BadRequest
 
         return artifacts
@@ -112,7 +122,7 @@ class Server(object):
             'method': self.req['method'],
             'host': self.req['host'],
             'port': self.req['port'],
-            'resource': self.req['url']
+            'resource': util.parse_normalized_url(self.req['url'])['resource'],
         }
         artifact_keys = ['ts', 'nonce', 'hash', 'ext',
                          'app', 'dlg', 'mac', 'id']
@@ -219,7 +229,7 @@ class Server(object):
 
         if not 'bewit' in qs or len(qs['bewit']) != 1 or \
                 len(qs['bewit'][0]) == 0:
-            print "No bewit query string parameter"
+            log.info("No bewit query string parameter")
             return False
 
         bewit = hcrypto.explode_bewit(qs['bewit'][0])
@@ -246,7 +256,7 @@ class Server(object):
         mac = hcrypto.calculate_mac('bewit', credentials, artifacts, True)
 
         if not util.compare(mac, bewit['mac']):
-            print "bewit " + mac + " didn't match " + bewit['mac']
+            log.info("bewit " + mac + " didn't match " + bewit['mac'])
             raise BadRequest
 
         return True
@@ -256,16 +266,16 @@ def valid_bewit_args(req, options):
     """Validates inputs and sets defaults for options."""
 
     if 'url' not in req or 'method' not in req:
-        print "missing url or method in request"
+        log.info("missing url or method in request")
         raise BadRequest
 
     if 'GET' != req['method'] and 'HEAD' != req['method']:
-        print "Bad Method"
+        log.info("Bad Method")
         raise BadRequest
 
     if 'headers' in req and 'authorization' in req['headers'] and \
             len(req['headers']['authorization']) > 0:
-        print "ERROR: Attempt to use auth header and bewit"
+        log.info("ERROR: Attempt to use auth header and bewit")
         raise BadRequest
 
     if 'localtime_offset_msec' not in options or \

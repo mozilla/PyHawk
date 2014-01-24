@@ -4,6 +4,7 @@
 Crypto functions for HAWK authentication
 """
 
+import logging
 import os
 from base64 import b64encode, urlsafe_b64encode, urlsafe_b64decode
 import hashlib
@@ -11,6 +12,8 @@ import hmac
 import string
 
 from hawk.util import HawkException
+
+log = logging.getLogger(__name__)
 
 
 HAWK_VER = 1
@@ -132,7 +135,7 @@ def explode_bewit(bewit):
     clear_b = urlsafe_b64decode(bewit)
     parts = clear_b.split('\\')
     if 4 != len(parts):
-        print "Wrong number of bewit parts"
+        log.info("Wrong number of bewit parts")
         raise InvalidBewit
     return {
         'id': parts[0],
