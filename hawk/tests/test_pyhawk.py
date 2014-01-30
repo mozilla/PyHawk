@@ -62,6 +62,43 @@ class HawkTestCase(unittest.TestCase):
                 'payload': 'Hello and welcome!'
                 })
 
+    def test_bad_content_auth(self):
+        header = hawk.client.header(url, 'GET', { 'credentials': CREDS['foobar-1234'],
+                                                  'ext': '',
+                                                  'nonce': 'lwfuar',
+                                                  'timestamp': 1367927332})
+        req = {
+            'method': 'GET',
+            'url': url,
+            'host': 'example.com',
+            'port': 80,
+            'headers': {
+                'authorization': header['field']
+                }
+            }
+
+        payload = 'this is some content'
+        server = hawk.Server(req, lambda cid: CREDS[cid])
+        request_body = ''
+        artifacts = server.authenticate({'payload': request_body})
+        header = server.header(artifacts,
+                               { 'payload': payload,
+                                 'contentType': 'text/plain' })
+        resp = {
+            'headers': {
+                'date': 'Tue, 07 May 2013 11:54:57 GMT',
+                'content-type': 'text/plain',
+                'server-authorization': header,
+           }
+        }
+
+        assert hawk.client.authenticate(resp, CREDS['foobar-1234'], header['artifacts'], {
+                'payload': payload
+                })
+        assert not hawk.client.authenticate(resp, CREDS['foobar-1234'], header['artifacts'], {
+                'payload': payload + 'TAMPERED_WITH'
+                })
+
     def test_bewit(self):
         bewit = hawk.client.get_bewit(url, {'credentials': CREDS['foobar-1234'],
                                             'ttl_sec': 60 * 1000})
