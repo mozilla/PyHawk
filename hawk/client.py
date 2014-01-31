@@ -209,7 +209,7 @@ def authenticate(response, credentials, artifacts, options=None):
         log.info("server mac mismatch " + mac + " != " + s_auth_attrs['mac'])
         return False
 
-    if 'payload' in options:
+    if 'payload' not in options:
         return True
 
     if 'hash' not in s_auth_attrs:
