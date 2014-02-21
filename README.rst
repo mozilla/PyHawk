@@ -7,6 +7,22 @@ Hawk_ is an HTTP authentication scheme using a message authentication code (MAC)
 
 PyHawk is great for consuming or providing webservices from Python.
 
+Alternatives
+------------
+
+PyHawk's goal is to track as closely to the original NodeJS' hawk code,
+because hawk is a primarily an authentication scheme documented by
+the implementaiton (as opposed to a standard).
+
+If you find this module un-pythonic, also consider:
+
+* mohawk_ Pythonic Hawk library
+
+* hawkauthlib_
+ 
+.. _mohawk: https://github.com/kumar303/mohaw
+.. _hawkauthlib: https://github.com/mozilla-services/hawkauthlib
+
 Usage (Client Side)
 -------------------
 
@@ -188,26 +204,3 @@ Edit setup.py and bump the version number.
     python setup.py sdist upload
 
 You should see your updates at https://pypi.python.org/pypi?%3Aaction=pkg_edit&name=PyHawk
-
-Plan
-----
-
-Iterate on a python library until it can communicate with the test client/server.
-
-1) ✓ Write Server API
-2) ✓ Write client API
-3) ✓ Switch to callback style
-4) Improve code style
-5) Make API elegant
-6) Put a release together
-
-A source for inspiration on 4 and 5 should be macauthlib_, from the Mozilla Services team, which is basically PyHawk, before Hawk existed. (Thanks rfk!)
-
-.. _macauthlib: https://github.com/mozilla-services/macauthlib
-
-Status
-------
-
-Client and Server APIs are working according to the Node.js implementation. W00t!
-
-Please file issues for code style, bugs, etc.
