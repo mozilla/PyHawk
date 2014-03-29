@@ -33,7 +33,7 @@ setup(
     long_description=LONG_DESCRIPTION,
     packages=['hawk', ],
     include_package_data=True,
-    install_requires=['requests>=1.2.0'],
+    install_requires=[],
     zip_safe=False,
     classifiers=[
         'Development Status :: 4 - Beta',
