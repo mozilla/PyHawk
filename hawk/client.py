@@ -275,17 +275,17 @@ def get_bewit(uri, options=None):
     if len(url_parts['query']) > 0:
         resource += '?' + url_parts['query']
 
-        artifacts = {
-            'ts': int(exp),
-            'nonce': '',
-            'method': 'GET',
-            'resource': resource,
-            'host': url_parts['hostname'],
-            'port': str(url_parts['port']),
-            'ext': options['ext']
-            }
+    artifacts = {
+        'ts': int(exp),
+        'nonce': '',
+        'method': 'GET',
+        'resource': resource,
+        'host': url_parts['hostname'],
+        'port': str(url_parts['port']),
+        'ext': options['ext']
+        }
 
-        return hcrypto.calculate_bewit(creds, artifacts, exp)
+    return hcrypto.calculate_bewit(creds, artifacts, exp)
 
 
 def valid_bewit_args(uri, options):
