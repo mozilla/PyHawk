@@ -102,7 +102,7 @@ class Server(object):
 
         skew = int(options['timestampSkewSec'])
         if math.fabs(int(attributes['ts']) - now) > skew:
-            log.inf("Expired request")
+            log.info("Expired request")
             raise BadRequest
 
         return artifacts
