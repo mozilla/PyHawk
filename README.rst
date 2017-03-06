@@ -1,3 +1,9 @@
+.. important::
+
+    **2017: THIS LIBRARY IS UNMAINTAINED AND MAY BE INSECURE. PLEASE USE ONE OF
+    THE ALTERNATIVES LISTED BELOW.**
+
+
 Python Libraries for HAWK
 ==========================
 
@@ -19,7 +25,7 @@ If you find this module un-pythonic, also consider:
 * mohawk_ Pythonic Hawk library
 
 * hawkauthlib_
- 
+
 .. _mohawk: https://github.com/kumar303/mohawk
 .. _hawkauthlib: https://github.com/mozilla-services/hawkauthlib
 
@@ -133,9 +139,7 @@ failing and so on. You can configure these logger channels with ``INFO``,
 Status
 ------
 
-This is under development, ready for adventurous users.
-There doesn't appear to be a Python library for HAWK.
-Let me know if there is already a robust library.
+**2017: This library is unmaintained and probably insecure.**
 
 Development
 -----------
