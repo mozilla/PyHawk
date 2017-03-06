@@ -20,7 +20,7 @@ If you find this module un-pythonic, also consider:
 
 * hawkauthlib_
  
-.. _mohawk: https://github.com/kumar303/mohaw
+.. _mohawk: https://github.com/kumar303/mohawk
 .. _hawkauthlib: https://github.com/mozilla-services/hawkauthlib
 
 Usage (Client Side)
