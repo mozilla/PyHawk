@@ -50,8 +50,8 @@ def module_for_algorithm(algorithm):
 
 def normalize_string(mac_type, options):
     """Serializes mac_type and options into a HAWK string."""
-    # TODO this smells
-    if 'hash' not in options or options['hash'] is None:
+
+    if options.get('hash') is None:
         options['hash'] = ''
 
     normalized = '\n'.join(
@@ -72,10 +72,9 @@ def normalize_string(mac_type, options):
 
     normalized += '\n'
 
-    if 'app' in options and options['app'] is not None and \
-       len(options['app']) > 0:
+    if options.get('app') is not None and len(options['app']) > 0:
         normalized += options['app'] + '\n'
-        if 'dlg' in options and options['dlg'] is not None:
+        if options.get('dlg') is not None:
             normalized += options['dlg'] + '\n'
 
     return normalized

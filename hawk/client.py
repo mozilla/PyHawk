@@ -181,7 +181,7 @@ def authenticate(response, credentials, artifacts, options=None):
 
         if 'ts' in www_auth_attrs:
             ts_mac = hcrypto.calculate_ts_mac(www_auth_attrs['ts'],
-                                                  credentials)
+                                              credentials)
             if not util.compare(ts_mac, www_auth_attrs['ts']):
                 log.info(ts_mac + " didn't match " + www_auth_attrs['ts'])
                 return False
@@ -299,11 +299,10 @@ def valid_bewit_args(uri, options):
     if not 'ttl_sec' in options:
         return False
 
-    if 'ext' not in options or options['ext'] is None:
+    if options.get('ext') is None:
         options['ext'] = ''
 
-    if 'localtime_offset_msec' not in options or \
-            options['localtime_offset_msec'] is None:
+    if options.get('localtime_offset_msec') is None:
         options['localtime_offset_msec'] = 0
 
     return True
