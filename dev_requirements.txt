@@ -1,2 +1,2 @@
 wsgiref==0.1.2
-requests==1.2.0
+requests==2.20.0
