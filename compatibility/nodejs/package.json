@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "hawk": "0.13.0",
-    "request": "2.20.0"
+    "request": "2.88.0"
   },
   "repository": "",
   "author": "Ozten",
